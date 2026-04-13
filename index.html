@@ -209,7 +209,7 @@
             const globalCount = state.pickedIds ? state.pickedIds.filter(pid => pid === id).length : 0;
             const inTeam = state.teams[teamIdx].roster && state.teams[teamIdx].roster.some(item => item.id === id);
 
-            if (globalCount >= 3 || inTeam) return alert("Cầu thủ không khả dụng!");
+            if (globalCount >= 1 || inTeam) return alert("Cầu thủ không khả dụng!");
 
             if (!state.teams[teamIdx].roster) state.teams[teamIdx].roster = [];
             state.teams[teamIdx].roster.push(p);
