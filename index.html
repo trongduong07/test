@@ -178,7 +178,7 @@
             state.picksThisTurn = 0;
             state.turnIdx++;
             
-            if (state.turnIdx > 1) {
+            if (state.turnIdx > 3) {
                 state.turnIdx = 0;
                 state.roundIdx++;
                 
@@ -239,10 +239,10 @@
             database.filter(p => removeAccents(p.name).includes(val)).slice(0, 50).forEach(p => {
                 const globalCount = state.pickedIds ? state.pickedIds.filter(id => id === p.id).length : 0;
                 const inTeam = state.teams[teamIdx].roster && state.teams[teamIdx].roster.some(item => item.id === p.id);
-                if (globalCount >= 3 || inTeam) return;
+                if (globalCount >= 1 || inTeam) return;
                 const card = document.createElement('div');
                 card.className = `bg-gray-800 p-3 rounded-lg border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
-                card.innerHTML = `<div class="overflow-hidden"><div class="font-bold text-sm uppercase text-white truncate">${p.name}</div><div class="text-[9px] text-gray-500">${p.dob} • ${globalCount}/3</div></div>
+                card.innerHTML = `<div class="overflow-hidden"><div class="font-bold text-sm uppercase text-white truncate">${p.name}</div><div class="text-[9px] text-gray-500">${p.dob} • ${globalCount}/1</div></div>
                                   <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-3 py-1 rounded font-black text-[10px]">PICK</button>`;
                 listDiv.appendChild(card);
             });
