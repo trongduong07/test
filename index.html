@@ -38,6 +38,19 @@
     </div>
 
     <!-- MAIN APP -->
+     window.onload = function() {
+        fetch('data.csv') // Tên file csv của bạn trên github
+            .then(response => response.text())
+            .then(text => {
+                const rows = text.split('\n').slice(1);
+                database = rows.map(row => {
+                    const cols = row.split(',');
+                    return { id: cols[0]?.trim(), name: cols[1]?.trim(), dob: cols[2]?.trim() };
+                }).filter(p => p.id && p.name);
+                localStorage.setItem('draft_db', JSON.stringify(database));
+                console.log("Database loaded!");
+            });
+    };
     <div id="main-app" class="hidden h-screen w-screen flex flex-col p-4">
         
         <!-- HEADER -->
