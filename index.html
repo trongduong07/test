@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>DRAFT PRO - MULTIPLAYER SYSTEM</title>
+    <title>DRAFT PRO - STREAM VERSION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
@@ -14,11 +14,18 @@
         .slot-filled { border-left-color: #facc15; background: rgba(250, 204, 21, 0.05); }
         #player-list::-webkit-scrollbar { width: 5px; }
         #player-list::-webkit-scrollbar-thumb { background: #333; }
+        
+        /* Hiệu ứng hiện thông báo */
+        @keyframes slideUp {
+            from { transform: translate(-50%, 50px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        .anno-animation { animation: slideUp 0.5s ease-out forwards; }
     </style>
 </head>
 <body>
 
-    <!-- MÀN HÌNH CHỌN VAI TRÒ -->
+    <!-- LOGIN SCREEN -->
     <div id="screen-login" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
         <div class="bg-gray-900 p-8 rounded-2xl border-t-4 border-yellow-500 w-96 text-center shadow-2xl">
             <h1 class="fvpl-font text-4xl italic font-black gold-text mb-6 uppercase tracking-widest">DRAFT PRO</h1>
@@ -33,65 +40,49 @@
                     <option value="player-3">TEAM 04 (NGƯỜI CHƠI)</option>
                 </select>
             </div>
-            <button onclick="doLogin()" class="w-full py-4 bg-yellow-600 text-black font-black fvpl-font italic text-xl rounded hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-600/20">VÀO PHÒNG DRAFT</button>
+            <button onclick="doLogin()" class="w-full py-4 bg-yellow-600 text-black font-black fvpl-font italic text-xl rounded hover:bg-yellow-500 transition-all">VÀO PHÒNG DRAFT</button>
         </div>
     </div>
 
     <!-- MAIN APP -->
     <div id="main-app" class="hidden h-screen w-screen flex flex-col p-4">
-        
-        <!-- HEADER -->
         <div class="flex justify-between items-center bg-gray-900/50 p-5 rounded-xl border border-white/5 mb-4">
             <div class="flex items-center gap-6">
-                <button onclick="backToLogin()" class="bg-gray-800 hover:bg-gray-700 p-2 rounded-lg text-gray-400" title="Quay lại chọn vai trò">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-                    </svg>
+                <button onclick="backToLogin()" class="bg-gray-800 hover:bg-gray-700 p-2 rounded-lg text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>
                 </button>
                 <div>
                     <div id="display-role" class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">---</div>
                     <div id="round-info" class="text-2xl font-black fvpl-font italic uppercase text-white leading-none">ROUND 1 | CHỜ ĐỢI...</div>
                 </div>
             </div>
-
-            <div class="text-center">
-                <div id="timer-display" class="text-7xl font-black fvpl-font italic gold-text">00:30</div>
-            </div>
-
+            <div id="timer-display" class="text-7xl font-black fvpl-font italic gold-text">00:30</div>
             <div id="admin-controls" class="hidden flex gap-2">
-                <button onclick="toggleTimer()" id="pause-btn" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-[10px] font-bold uppercase italic transition-all">Bắt đầu</button>
-                <button onclick="resetDraft()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-[10px] font-bold uppercase italic transition-all">Reset Toàn Bộ</button>
+                <button onclick="toggleTimer()" id="pause-btn" class="bg-blue-600 px-4 py-2 rounded text-[10px] font-bold uppercase italic">Bắt đầu</button>
+                <button onclick="resetDraft()" class="bg-red-700 px-4 py-2 rounded text-[10px] font-bold uppercase italic">Reset</button>
             </div>
         </div>
 
         <div class="grid grid-cols-12 gap-6 flex-1 overflow-hidden">
-            <!-- 4 TEAMS BOARD -->
             <div id="team-container" class="col-span-12 lg:col-span-5 grid grid-cols-2 gap-3 overflow-y-auto pr-2"></div>
-
-            <!-- SEARCH & PICK ZONE -->
             <div id="pick-zone" class="col-span-12 lg:col-span-7 flex flex-col bg-gray-900/30 rounded-xl p-4 border border-white/5 overflow-hidden">
-                <div class="mb-4">
-                    <input type="text" id="search-input" oninput="searchPlayer()" placeholder="Nhập tên cầu thủ để tìm..." 
-                           class="w-full p-5 bg-black border-2 border-gray-800 rounded-xl text-2xl outline-none focus:border-yellow-500 italic text-white transition-all">
-                </div>
-                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-2"></div>
+                <input type="text" id="search-input" oninput="searchPlayer()" placeholder="Nhập tên cầu thủ để tìm..." 
+                       class="w-full p-5 bg-black border-2 border-gray-800 rounded-xl text-2xl outline-none focus:border-yellow-500 italic text-white mb-4">
+                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start"></div>
             </div>
         </div>
     </div>
 
-    <!-- ANNOUNCEMENT OVERLAY -->
-    <div id="anno" class="hidden fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center text-center">
-        <div>
-            <div class="text-2xl italic font-bold text-yellow-500 uppercase mb-4" id="anno-team">TEAM SELECTED</div>
-            <div class="text-[100px] font-black fvpl-font italic text-white uppercase leading-none" id="anno-player">RONALDO</div>
-        </div>
+    <!-- ANNOUNCEMENT (SMALLLER & STREAM OPTIMIZED) -->
+    <div id="anno" class="hidden fixed bottom-12 left-1/2 -translate-x-1/2 z-[10000] bg-black/90 border-t-4 border-yellow-500 p-6 px-12 rounded-2xl text-center shadow-[0_0_50px_rgba(0,0,0,1)] anno-animation">
+        <div class="text-sm italic font-bold text-yellow-500 uppercase mb-1 tracking-[0.2em]" id="anno-team">TEAM 01 ĐÃ CHỌN</div>
+        <div class="text-5xl font-black fvpl-font italic text-white uppercase" id="anno-player">C. RONALDO</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // GIỮ NGUYÊN FIREBASE CONFIG CỦA BẠN
         const firebaseConfig = {
             apiKey: "AIzaSyCfbFKpqUxCUUCnYS7ZrHS-pfwbmQ4_dFk",
             authDomain: "test-7b6d4.firebaseapp.com",
@@ -116,65 +107,60 @@
         };
         let state = JSON.parse(JSON.stringify(initialState));
         let userRole = '';
+        let lastPickCount = 0;
 
-        // TỰ ĐỘNG LOAD CSV
         async function loadCSV() {
             try {
                 const resp = await fetch('data.csv');
                 const text = await resp.text();
-                const rows = text.split('\n').filter(r => r.trim() !== '');
-                database = rows.slice(1).map(row => {
+                database = text.split('\n').filter(r => r.trim() !== '').slice(1).map(row => {
                     const cols = row.split(',');
                     return { id: cols[0]?.trim(), name: cols[1]?.trim(), dob: cols[2]?.trim() };
                 }).filter(p => p.id && p.name);
-                console.log("Database Loaded:", database.length);
-            } catch (e) { console.error("Lỗi file CSV:", e); }
+            } catch (e) { console.error("CSV Error"); }
         }
 
-        // 1. ĐĂNG NHẬP
         window.doLogin = function() {
             userRole = document.getElementById('role-select').value;
             document.getElementById('screen-login').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
-            
             if (userRole === 'admin') document.getElementById('admin-controls').classList.remove('hidden');
-            else document.getElementById('admin-controls').classList.add('hidden');
-
             if (userRole === 'viewer') {
                 document.getElementById('pick-zone').classList.add('hidden');
                 document.getElementById('team-container').className = "col-span-12 grid grid-cols-4 gap-4 overflow-y-auto";
-            } else {
-                document.getElementById('pick-zone').classList.remove('hidden');
-                document.getElementById('team-container').className = "col-span-12 lg:col-span-5 grid grid-cols-2 gap-3 overflow-y-auto pr-2";
             }
             loadCSV();
             syncFromFirebase();
         };
 
-        // 2. QUAY LẠI LOGIN
         window.backToLogin = function() {
-            document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('screen-login').classList.remove('hidden');
+            location.reload();
         };
 
-        // 3. ĐỒNG BỘ FIREBASE
         function syncFromFirebase() {
             onValue(stateRef, (snapshot) => {
                 const val = snapshot.val();
-                if (val) state = val;
-                else state = JSON.parse(JSON.stringify(initialState));
-                renderUI();
+                if (val) {
+                    // PHÁT HIỆN CÓ CẦU THỦ MỚI ĐƯỢC CHỌN (Chỉ dành cho Viewer)
+                    if (userRole === 'viewer' && val.currentPick > state.currentPick) {
+                        const prevTeamIdx = getTeamIdxOfPick(val.currentPick - 1);
+                        const team = val.teams[prevTeamIdx];
+                        const lastPlayer = team.roster[team.roster.length - 1];
+                        if (lastPlayer) showAnnouncement(team.name, lastPlayer.name);
+                    }
+                    state = val;
+                    renderUI();
+                } else {
+                    state = JSON.parse(JSON.stringify(initialState));
+                    renderUI();
+                }
             });
         }
 
-        function saveToFirebase() {
-            set(stateRef, state);
-        }
-
-        // 4. LOGIC CHÍNH
-        function getCurrentTeamIdx() {
-            let round = Math.floor(state.currentPick / 4);
-            let turn = state.currentPick % 4;
+        // Logic tìm Team đã pick dựa trên số lượt (Snake Draft)
+        function getTeamIdxOfPick(pickNum) {
+            let round = Math.floor(pickNum / 4);
+            let turn = pickNum % 4;
             return (round % 2 !== 0) ? (3 - turn) : turn;
         }
 
@@ -183,124 +169,81 @@
             const listDiv = document.getElementById('player-list');
             listDiv.innerHTML = '';
             if (val.length < 2) return;
-
-            const results = database.filter(p => p.name.toLowerCase().includes(val)).slice(0, 10);
-            results.forEach(p => {
+            database.filter(p => p.name.toLowerCase().includes(val)).slice(0, 10).forEach(p => {
                 const isPicked = state.pickedIds && state.pickedIds.includes(p.id);
                 const card = document.createElement('div');
                 card.className = `bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center ${isPicked ? 'opacity-20 grayscale' : 'hover:border-yellow-500 cursor-pointer'}`;
-                card.innerHTML = `
-                    <div>
-                        <div class="font-black fvpl-font italic text-lg uppercase leading-none mb-1 text-white">${p.name}</div>
-                        <div class="text-[9px] text-gray-400 font-bold">ID: ${p.id} • ${p.dob}</div>
-                    </div>
-                    ${!isPicked ? `<button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-4 py-1 rounded font-black italic text-[10px]">PICK</button>` : ''}
-                `;
+                card.innerHTML = `<div><div class="font-black fvpl-font italic text-lg uppercase text-white">${p.name}</div><div class="text-[9px] text-gray-400">ID: ${p.id}</div></div>
+                    ${!isPicked ? `<button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-4 py-1 rounded font-black italic text-[10px]">PICK</button>` : ''}`;
                 listDiv.appendChild(card);
             });
         };
 
         window.doPick = function(id) {
-            const currentIdx = getCurrentTeamIdx();
+            const currentIdx = getTeamIdxOfPick(state.currentPick);
             if (userRole !== 'admin' && userRole !== `player-${currentIdx}`) return alert("KHÔNG PHẢI LƯỢT CỦA BẠN!");
-
             const p = database.find(item => item.id === id);
             if (!state.teams[currentIdx].roster) state.teams[currentIdx].roster = [];
             if (!state.pickedIds) state.pickedIds = [];
-
             state.teams[currentIdx].roster.push(p);
             state.pickedIds.push(id);
             state.currentPick++;
             state.timer = 30;
-
-            saveToFirebase();
-            showAnnouncement(state.teams[currentIdx].name, p.name);
-            document.getElementById('search-input').value = '';
-            document.getElementById('player-list').innerHTML = '';
+            set(stateRef, state);
         };
 
-        // 5. XÓA CẦU THỦ (UNDO) - CHỈ ADMIN
         window.removePick = function(tIdx, pIdx) {
             if (userRole !== 'admin') return;
             const p = state.teams[tIdx].roster[pIdx];
-            if (!p) return;
-
-            if (confirm(`Xóa cầu thủ ${p.name} khỏi ${state.teams[tIdx].name}?`)) {
-                state.pickedIds = state.pickedIds.filter(id => id !== p.id);
-                state.teams[tIdx].roster.splice(pIdx, 1);
-                state.currentPick--; // Lùi lượt pick
-                saveToFirebase();
-            }
+            state.pickedIds = state.pickedIds.filter(id => id !== p.id);
+            state.teams[tIdx].roster.splice(pIdx, 1);
+            state.currentPick--;
+            set(stateRef, state);
         };
 
-        // 6. RESET TOÀN BỘ
         window.resetDraft = function() {
-            if (userRole !== 'admin') return;
-            if (confirm("CẢNH BÁO: Xóa toàn bộ dữ liệu và bắt đầu lại từ đầu?")) {
-                set(stateRef, initialState);
-                document.getElementById('search-input').value = '';
-                document.getElementById('player-list').innerHTML = '';
-            }
+            if (userRole === 'admin' && confirm("Reset?")) set(stateRef, initialState);
         };
 
         function renderUI() {
-            const currentIdx = getCurrentTeamIdx();
+            const currentIdx = getTeamIdxOfPick(state.currentPick);
             document.getElementById('display-role').innerText = userRole.toUpperCase();
-            document.getElementById('round-info').innerText = `ROUND ${Math.floor(state.currentPick / 4) + 1} | ${state.teams[currentIdx].name} ĐANG CHỌN`;
-            
+            document.getElementById('round-info').innerText = `ROUND ${Math.floor(state.currentPick / 4) + 1} | ${state.teams[currentIdx]?.name} ĐANG CHỌN`;
             const container = document.getElementById('team-container');
             container.innerHTML = state.teams.map((team, tIdx) => {
                 const isActive = (tIdx === currentIdx);
                 let slotsHtml = '';
                 for(let i=0; i<11; i++) {
                     const p = team.roster ? team.roster[i] : null;
-                    slotsHtml += `<div class="slot ${p ? 'slot-filled' : ''}">
-                        <span class="text-gray-600 mr-2 w-3">${i+1}</span>
-                        <span class="truncate uppercase font-bold text-white flex-1">${p ? p.name : ''}</span>
-                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${tIdx}, ${i})" class="text-red-500 hover:text-white font-bold ml-1">✕</button>` : ''}
-                    </div>`;
+                    slotsHtml += `<div class="slot ${p ? 'slot-filled' : ''}"><span class="text-gray-600 mr-2 w-3">${i+1}</span><span class="truncate uppercase font-bold text-white flex-1">${p ? p.name : ''}</span>
+                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${tIdx}, ${i})" class="text-red-500 ml-1">✕</button>` : ''}</div>`;
                 }
-                return `
-                    <div class="flex flex-col bg-gray-900 rounded-xl overflow-hidden border border-white/5 ${isActive ? 'active-turn' : ''}">
-                        <div class="p-2 text-center font-black italic fvpl-font text-xs ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-500'} uppercase">
-                            ${team.name}
-                        </div>
-                        <div class="p-2">${slotsHtml}</div>
-                    </div>`;
+                return `<div class="flex flex-col bg-gray-900 rounded-xl overflow-hidden border border-white/5 ${isActive ? 'active-turn' : ''}">
+                    <div class="p-2 text-center font-black italic fvpl-font text-xs ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-500'} uppercase">${team.name}</div>
+                    <div class="p-2">${slotsHtml}</div></div>`;
             }).join('');
-
             const display = document.getElementById('timer-display');
             display.innerText = `00:${String(state.timer).padStart(2, '0')}`;
-            if (state.timer <= 10) display.classList.add('text-red-600', 'animate-pulse');
-            else display.classList.remove('text-red-600', 'animate-pulse');
-            
             document.getElementById('pause-btn').innerText = state.isPaused ? "Bắt đầu" : "Tạm dừng";
         }
 
-        // TIMER
         setInterval(() => {
-            if (userRole === 'admin' && !state.isPaused && state.timer > 0) {
-                state.timer--;
-                saveToFirebase();
-            } else if (userRole === 'admin' && !state.isPaused && state.timer === 0) {
-                state.currentPick++;
-                state.timer = 30;
-                saveToFirebase();
+            if (userRole === 'admin' && !state.isPaused) {
+                if (state.timer > 0) state.timer--;
+                else { state.timer = 30; state.currentPick++; }
+                set(stateRef, state);
             }
         }, 1000);
 
-        window.toggleTimer = function() {
-            if (userRole !== 'admin') return;
-            state.isPaused = !state.isPaused;
-            saveToFirebase();
-        };
+        window.toggleTimer = function() { if(userRole === 'admin') { state.isPaused = !state.isPaused; set(stateRef, state); } };
 
-        function showAnnouncement(team, player) {
+        function showAnnouncement(teamName, playerName) {
             const anno = document.getElementById('anno');
-            document.getElementById('anno-team').innerText = team + " ĐÃ CHỌN";
-            document.getElementById('anno-player').innerText = player;
+            document.getElementById('anno-team').innerText = teamName + " ĐÃ CHỌN";
+            document.getElementById('anno-player').innerText = playerName;
             anno.classList.remove('hidden');
-            setTimeout(() => anno.classList.add('hidden'), 3000);
+            // Sau 2.5 giây thì ẩn đi
+            setTimeout(() => { anno.classList.add('hidden'); }, 2500);
         }
     </script>
 </body>
