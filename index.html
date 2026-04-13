@@ -44,7 +44,7 @@
                     <div id="round-info" class="text-xl font-black fvpl-font italic uppercase text-white leading-none tracking-tight">ROUND INFO</div>
                 </div>
             </div>
-            <div id="timer-display" class="text-6xl font-black fvpl-font italic gold-text tracking-tighter">00:30</div>
+            <div id="timer-display" class="text-6xl font-black fvpl-font italic gold-text tracking-tighter">30</div>
             <div id="admin-controls" class="hidden flex gap-2">
                 <button onclick="toggleTimer()" id="pause-btn" class="bg-blue-600 px-4 py-2 rounded text-[10px] font-bold uppercase italic transition-all">Bắt đầu</button>
                 <button onclick="resetDraft()" class="bg-red-700 px-4 py-2 rounded text-[10px] font-bold uppercase italic transition-all">Reset</button>
@@ -284,7 +284,7 @@
                 </div>`;
             }).join('');
             
-            document.getElementById('timer-display').innerText = `00:${String(state.timer).padStart(2, '0')}`;
+            document.getElementById('timer-display').innerText = `${String(state.timer).padStart(2, '0')}`;
             document.getElementById('pause-btn').innerText = state.isPaused ? "Bắt đầu" : "Tạm dừng";
             
             if (state.timer === 0 && userRole === 'admin' && !state.isPaused) nextTurn();
