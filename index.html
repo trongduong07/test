@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>DRAFT SYSTEM - CSV IMPORT ENABLED</title>
+    <title>DRAFT PRO - MULTIPLAYER SYSTEM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
@@ -18,7 +18,6 @@
 </head>
 <body>
 
-    <!-- MÀN HÌNH CHỌN VAI TRÒ -->
     <div id="screen-login" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
         <div class="bg-gray-900 p-8 rounded-2xl border-t-4 border-yellow-500 w-96 text-center shadow-2xl">
             <h1 class="fvpl-font text-4xl italic font-black gold-text mb-6 uppercase tracking-widest">DRAFT PRO</h1>
@@ -37,21 +36,13 @@
         </div>
     </div>
 
-    <!-- MAIN APP -->
-    
     <div id="main-app" class="hidden h-screen w-screen flex flex-col p-4">
-        
-        <!-- HEADER -->
         <div class="flex justify-between items-center bg-gray-900/50 p-5 rounded-xl border border-white/5 mb-4">
-            <div class="flex items-center gap-6">
-                <div>
-                    <div id="display-role" class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">---</div>
-                    <div id="round-info" class="text-2xl font-black fvpl-font italic uppercase text-white">ROUND 1 | TEAM 1 ĐANG CHỌN</div>
-                </div>
+            <div>
+                <div id="display-role" class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest">---</div>
+                <div id="round-info" class="text-2xl font-black fvpl-font italic uppercase text-white">CHỜ ĐỢI...</div>
             </div>
-            <div class="text-center">
-                <div id="timer-display" class="text-7xl font-black fvpl-font italic gold-text">00:30</div>
-            </div>
+            <div id="timer-display" class="text-7xl font-black fvpl-font italic gold-text">00:30</div>
             <div id="admin-controls" class="hidden flex gap-2">
                 <button onclick="toggleTimer()" id="pause-btn" class="bg-blue-600 px-4 py-2 rounded text-[10px] font-bold uppercase italic">Bắt đầu</button>
                 <button onclick="resetDraft()" class="bg-red-900 px-4 py-2 rounded text-[10px] font-bold uppercase italic">Reset</button>
@@ -59,48 +50,27 @@
         </div>
 
         <div class="grid grid-cols-12 gap-6 flex-1 overflow-hidden">
-            <!-- 4 TEAMS BOARD -->
             <div id="team-container" class="col-span-12 lg:col-span-5 grid grid-cols-2 gap-3 overflow-y-auto pr-2"></div>
-
-            <!-- SEARCH & PICK ZONE -->
             <div id="pick-zone" class="col-span-12 lg:col-span-7 flex flex-col bg-gray-900/30 rounded-xl p-4 border border-white/5 overflow-hidden">
-                
-                <!-- ADMIN ONLY: IMPORT CSV -->
-                <div id="admin-setup" class="hidden mb-4 p-4 bg-yellow-600/10 border border-yellow-600/30 rounded-lg">
-                    <p class="text-[10px] font-bold gold-text uppercase mb-2 italic">Cài đặt Database (Chỉ Admin thấy):</p>
-                    <input type="file" id="csv-file" accept=".csv" class="text-xs text-gray-400 file:bg-yellow-600 file:border-none file:px-4 file:py-1 file:rounded file:mr-4 file:font-bold pointer-events-auto">
-                    <button onclick="handleImport()" class="ml-2 bg-white text-black px-4 py-1 rounded text-[10px] font-bold uppercase">Nạp Data</button>
-                </div>
-
-                <!-- SEARCH ENGINE -->
-                <div class="mb-4">
-                    <input type="text" id="search-input" oninput="searchPlayer()" placeholder="Nhập tên cầu thủ để tìm..." 
-                           class="w-full p-5 bg-black border-2 border-gray-800 rounded-xl text-2xl outline-none focus:border-yellow-500 italic">
-                </div>
-
-                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-2">
-                    <div class="col-span-2 text-center text-gray-600 mt-20 italic">Chưa có dữ liệu. Admin hãy nạp file CSV.</div>
-                </div>
+                <input type="text" id="search-input" oninput="searchPlayer()" placeholder="Nhập tên cầu thủ để tìm..." 
+                       class="w-full p-5 bg-black border-2 border-gray-800 rounded-xl text-2xl outline-none focus:border-yellow-500 italic text-white mb-4">
+                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start"></div>
             </div>
         </div>
     </div>
 
-    <!-- ANNOUNCEMENT OVERLAY -->
-    <div id="anno" class="hidden fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center">
-        <div class="text-center">
+    <div id="anno" class="hidden fixed inset-0 z-[10000] bg-black/95 flex items-center justify-center text-center">
+        <div>
             <div class="text-2xl italic font-bold text-yellow-500 uppercase mb-4" id="anno-team">TEAM SELECTED</div>
             <div class="text-[100px] font-black fvpl-font italic text-white uppercase leading-none" id="anno-player">RONALDO</div>
         </div>
     </div>
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
 
-        // Your web app's Firebase configuration
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    <!-- SỬ DỤNG TYPE="MODULE" VÀ FIREBASE SDK MỚI NHẤT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyCfbFKpqUxCUUCnYS7ZrHS-pfwbmQ4_dFk",
             authDomain: "test-7b6d4.firebaseapp.com",
@@ -108,30 +78,13 @@
             projectId: "test-7b6d4",
             storageBucket: "test-7b6d4.firebasestorage.app",
             messagingSenderId: "1051481560305",
-            appId: "1:1051481560305:web:3f69ad14e54dff01a68550",
-            measurementId: "G-WWCDMDG469"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    </script>
-    <script>
-        
-         window.onload = function() {
-            fetch('data.csv') // Tên file csv của bạn trên github
-                .then(response => response.text())
-                .then(text => {
-                    const rows = text.split('\n').slice(1);
-                    database = rows.map(row => {
-                        const cols = row.split(',');
-                        return { id: cols[0]?.trim(), name: cols[1]?.trim(), dob: cols[2]?.trim() };
-                    }).filter(p => p.id && p.name);
-                    localStorage.setItem('draft_db', JSON.stringify(database));
-                    console.log("Database loaded!");
-                });
+            appId: "1:1051481560305:web:3f69ad14e54dff01a68550"
         };
-        // TRẠNG THÁI TOÀN CỤC
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const stateRef = ref(db, 'draft_state');
+
         let database = [];
         let state = {
             currentPick: 0,
@@ -142,76 +95,61 @@
         };
         let userRole = '';
 
-        // 1. ĐĂNG NHẬP & KHỞI TẠO
-        function doLogin() {
-            userRole = document.getElementById('role-select').value;
-            document.getElementById('screen-login').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-
-            if (userRole === 'admin') {
-                document.getElementById('admin-controls').classList.remove('hidden');
-                document.getElementById('admin-setup').classList.remove('hidden');
-            } else if (userRole === 'viewer') {
-                document.getElementById('pick-zone').classList.add('hidden');
-                document.getElementById('team-container').className = "col-span-12 grid grid-cols-4 gap-4 overflow-y-auto";
-            }
-
-            loadState();
-            renderUI();
-            setInterval(syncLoop, 1000);
-        }
-
-        // 2. XỬ LÝ IMPORT CSV
-        function handleImport() {
-            const fileInput = document.getElementById('csv-file');
-            if (!fileInput.files[0]) return alert("Vui lòng chọn file .csv");
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const rows = text.split('\n').slice(1); // Bỏ header
-                database = rows.map(row => {
+        // Tự động load CSV từ file cùng thư mục
+        async function loadCSV() {
+            try {
+                const resp = await fetch('data.csv');
+                const text = await resp.text();
+                const rows = text.split('\n').filter(r => r.trim() !== '');
+                database = rows.slice(1).map(row => {
                     const cols = row.split(',');
                     return { id: cols[0]?.trim(), name: cols[1]?.trim(), dob: cols[2]?.trim() };
                 }).filter(p => p.id && p.name);
-                
-                localStorage.setItem('draft_db', JSON.stringify(database));
-                alert("Đã nạp " + database.length + " cầu thủ!");
-                searchPlayer(); // Refresh danh sách hiển thị
-            };
-            reader.readAsText(fileInput.files[0]);
+                console.log("Database loaded:", database.length);
+            } catch (e) { console.error("Lỗi load CSV:", e); }
         }
 
-        // 3. LOGIC SNAKE DRAFT
+        window.doLogin = function() {
+            userRole = document.getElementById('role-select').value;
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            if (userRole === 'admin') document.getElementById('admin-controls').classList.remove('hidden');
+            if (userRole === 'viewer') {
+                document.getElementById('pick-zone').classList.add('hidden');
+                document.getElementById('team-container').className = "col-span-12 grid grid-cols-4 gap-4 overflow-y-auto";
+            }
+            loadCSV();
+            // Lắng nghe thay đổi từ Firebase
+            onValue(stateRef, (snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    state = val;
+                    renderUI();
+                }
+            });
+        };
+
         function getCurrentTeamIdx() {
             let round = Math.floor(state.currentPick / 4);
             let turn = state.currentPick % 4;
             return (round % 2 !== 0) ? (3 - turn) : turn;
         }
 
-        // 4. TÌM KIẾM & PICK
-        function searchPlayer() {
-            if (database.length === 0) {
-                const storedDb = localStorage.getItem('draft_db');
-                if (storedDb) database = JSON.parse(storedDb);
-            }
-
+        window.searchPlayer = function() {
             const val = document.getElementById('search-input').value.toLowerCase().trim();
             const listDiv = document.getElementById('player-list');
             listDiv.innerHTML = '';
-
             if (val.length < 2) return;
 
             const results = database.filter(p => p.name.toLowerCase().includes(val)).slice(0, 10);
-            
             results.forEach(p => {
-                const isPicked = state.pickedIds.includes(p.id);
+                const isPicked = state.pickedIds && state.pickedIds.includes(p.id);
                 const card = document.createElement('div');
                 card.className = `bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center ${isPicked ? 'opacity-20 grayscale' : 'hover:border-yellow-500 cursor-pointer'}`;
                 card.innerHTML = `
                     <div>
-                        <div class="font-black fvpl-font italic text-lg uppercase leading-none mb-1">${p.name}</div>
-                        <div class="text-[9px] text-gray-500 uppercase font-bold">ID: ${p.id} • ${p.dob}</div>
+                        <div class="font-black fvpl-font italic text-lg uppercase leading-none mb-1 text-white">${p.name}</div>
+                        <div class="text-[9px] text-gray-400 font-bold uppercase">ID: ${p.id} • ${p.dob}</div>
                     </div>
                     ${!isPicked ? `<button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-4 py-1 rounded font-black italic text-[10px]">PICK</button>` : ''}
                 `;
@@ -219,24 +157,25 @@
             });
         }
 
-        function doPick(id) {
+        window.doPick = function(id) {
             const currentIdx = getCurrentTeamIdx();
-            if (userRole !== 'admin' && userRole !== `player-${currentIdx}`) return alert("CHƯA ĐẾN LƯỢT CỦA BẠN!");
+            if (userRole !== 'admin' && userRole !== `player-${currentIdx}`) return alert("KHÔNG PHẢI LƯỢT CỦA BẠN!");
 
             const p = database.find(item => item.id === id);
+            if (!state.teams[currentIdx].roster) state.teams[currentIdx].roster = [];
+            if (!state.pickedIds) state.pickedIds = [];
+
             state.teams[currentIdx].roster.push(p);
             state.pickedIds.push(id);
             state.currentPick++;
             state.timer = 30;
 
-            saveState();
-            renderUI();
+            set(stateRef, state); // Lưu lên Firebase
             showAnnouncement(state.teams[currentIdx].name, p.name);
             document.getElementById('search-input').value = '';
             document.getElementById('player-list').innerHTML = '';
-        }
+        };
 
-        // 5. HIỂN THỊ UI
         function renderUI() {
             const currentIdx = getCurrentTeamIdx();
             document.getElementById('display-role').innerText = userRole.toUpperCase();
@@ -247,11 +186,10 @@
                 const isActive = (tIdx === currentIdx);
                 let slotsHtml = '';
                 for(let i=0; i<11; i++) {
-                    const p = team.roster[i];
+                    const p = team.roster ? team.roster[i] : null;
                     slotsHtml += `<div class="slot ${p ? 'slot-filled' : ''}">
                         <span class="text-gray-600 mr-2 w-3">${i+1}</span>
                         <span class="truncate uppercase font-bold text-white">${p ? p.name : ''}</span>
-                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${tIdx},${i})" class="ml-auto text-red-500 hover:text-white font-bold">✕</button>` : ''}
                     </div>`;
                 }
                 return `
@@ -262,46 +200,24 @@
                         <div class="p-2">${slotsHtml}</div>
                     </div>`;
             }).join('');
-        }
 
-        function removePick(tIdx, pIdx) {
-            const p = state.teams[tIdx].roster[pIdx];
-            state.pickedIds = state.pickedIds.filter(id => id !== p.id);
-            state.teams[tIdx].roster.splice(pIdx, 1);
-            state.currentPick--;
-            saveState();
-            renderUI();
-        }
-
-        // 6. ĐỒNG BỘ & TIMER
-        function syncLoop() {
-            if (userRole === 'admin' && !state.isPaused) {
-                if (state.timer > 0) state.timer--;
-                else { state.timer = 30; state.currentPick++; }
-                saveState();
-            } else {
-                loadState();
-            }
-            updateTimerDisplay();
-        }
-
-        function updateTimerDisplay() {
+            // Cập nhật Timer
             const display = document.getElementById('timer-display');
             display.innerText = `00:${String(state.timer).padStart(2, '0')}`;
             if (state.timer <= 10) display.classList.add('text-red-600', 'animate-pulse');
             else display.classList.remove('text-red-600', 'animate-pulse');
         }
 
-        function saveState() { localStorage.setItem('draft_v4_state', JSON.stringify(state)); }
-        function loadState() {
-            const saved = localStorage.getItem('draft_v4_state');
-            if (saved) state = JSON.parse(saved);
-            const storedDb = localStorage.getItem('draft_db');
-            if (storedDb && database.length === 0) database = JSON.parse(storedDb);
-        }
+        // Timer chạy đồng bộ
+        setInterval(() => {
+            if (userRole === 'admin' && !state.isPaused && state.timer > 0) {
+                state.timer--;
+                set(stateRef, state);
+            }
+        }, 1000);
 
-        function toggleTimer() { state.isPaused = !state.isPaused; document.getElementById('pause-btn').innerText = state.isPaused ? "Tiếp tục" : "Tạm dừng"; saveState(); renderUI(); }
-        function resetDraft() { if(confirm("Xóa toàn bộ dữ liệu?")) { localStorage.removeItem('draft_v4_state'); location.reload(); } }
+        window.toggleTimer = function() { state.isPaused = !state.isPaused; set(stateRef, state); };
+        window.resetDraft = function() { if(confirm("Reset toàn bộ?")) set(stateRef, null).then(()=>location.reload()); };
 
         function showAnnouncement(team, player) {
             const anno = document.getElementById('anno');
@@ -310,9 +226,6 @@
             anno.classList.remove('hidden');
             setTimeout(() => anno.classList.add('hidden'), 3000);
         }
-
-        // Lắng nghe thay đổi từ các tab khác
-        window.addEventListener('storage', () => { loadState(); renderUI(); });
     </script>
 </body>
 </html>
