@@ -6,20 +6,55 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
-        body { background: #08080c; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+        body { 
+            background: #08080c; color: white; font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden; height: 100vh; width: 100vw; 
+        }
         .fvpl-font { font-family: Oswald, sans-serif; }
         .gold-text { color: #facc15; }
         .active-turn { border: 2px solid #facc15; background: rgba(250, 204, 21, 0.1); box-shadow: 0 0 20px rgba(250, 204, 21, 0.2); }
-        .slot { height: 32px; background: rgba(255,255,255,0.03); margin-bottom: 2px; display: flex; align-items: center; padding: 0 8px; font-size: 10px; border-radius: 4px; border-left: 3px solid transparent; flex-shrink: 0; }
-        .slot-filled { border-left-color: #facc15; background: rgba(250, 204, 21, 0.05); }
+        
+        /* Slot cho Admin (Có scroll nên để chiều cao cố định) */
+        .slot-admin { 
+            height: 34px; 
+            background: rgba(255,255,255,0.03); 
+            margin-bottom: 2px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 10px; 
+            font-size: 12px; 
+            border-left: 3px solid transparent; 
+            flex-shrink: 0; 
+        }
+
+        /* Slot cho Player/Viewer (Tối ưu để hiện đủ 23 người khi F11) */
+        .slot-fit { 
+            height: calc((100vh - 160px) / 23);
+            min-height: 22px;
+            background: rgba(255,255,255,0.02); 
+            margin-bottom: 1px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 8px; 
+            font-size: 11px; 
+            border-left: 3px solid transparent; 
+            flex-shrink: 0; 
+        }
+
+        .slot-filled { border-left-color: #facc15; background: rgba(250, 204, 21, 0.08); }
+        .slot-num { width: 20px; font-weight: bold; color: #555; font-size: 10px; }
+        
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        
         @keyframes slideUp { from { transform: translate(-50%, 50px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
         .anno-animation { animation: slideUp 0.5s ease-out forwards; }
     </style>
 </head>
-<body class="flex flex-col">
+<body class="flex flex-col p-2 h-screen overflow-hidden">
 
+    <!-- LOGIN SCREEN -->
     <div id="screen-login" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
         <div class="bg-gray-900 p-8 rounded-2xl border-t-4 border-yellow-500 w-96 text-center shadow-2xl">
             <h1 class="fvpl-font text-4xl italic font-black gold-text mb-6 uppercase tracking-widest">DRAFT PRO</h1>
@@ -35,31 +70,43 @@
         </div>
     </div>
 
-    <div id="main-app" class="hidden h-full flex flex-col p-4 overflow-hidden">
-        <div class="flex justify-between items-center bg-gray-900/50 p-4 rounded-xl border border-white/5 mb-4 shrink-0 shadow-lg">
+    <!-- MAIN APP -->
+    <div id="main-app" class="hidden h-full flex flex-col overflow-hidden">
+        <!-- HEADER -->
+        <div class="flex justify-between items-center bg-gray-900/50 p-3 rounded-xl border border-white/5 mb-2 shrink-0 shadow-lg">
             <div class="flex items-center gap-4">
-                <button onclick="location.reload()" class="bg-gray-800 p-2 rounded-lg text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg></button>
+                <button onclick="location.reload()" class="bg-gray-800 p-2 rounded-lg text-gray-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>
+                </button>
                 <div>
                     <div id="display-role" class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest leading-none mb-1">---</div>
                     <div id="round-info" class="text-xl font-black fvpl-font italic uppercase text-white leading-none tracking-tight">ROUND INFO</div>
                 </div>
             </div>
-            <div id="timer-display" class="text-6xl font-black fvpl-font italic gold-text tracking-tighter">30</div>
+            <div id="timer-display" class="text-5xl font-black fvpl-font italic gold-text tracking-tighter">30</div>
             <div id="admin-controls" class="hidden flex gap-2">
-                <button onclick="toggleTimer()" id="pause-btn" class="bg-blue-600 px-4 py-2 rounded text-[10px] font-bold uppercase italic transition-all">Bắt đầu</button>
-                <button onclick="resetDraft()" class="bg-red-700 px-4 py-2 rounded text-[10px] font-bold uppercase italic transition-all">Reset</button>
+                <button onclick="toggleTimer()" id="pause-btn" class="bg-blue-600 px-4 py-2 rounded text-[10px] font-bold uppercase italic hover:bg-blue-500 transition-all">Bắt đầu</button>
+                <button onclick="resetDraft()" class="bg-red-700 px-4 py-2 rounded text-[10px] font-bold uppercase italic hover:bg-red-600 transition-all">Reset</button>
             </div>
         </div>
 
-        <div class="grid grid-cols-12 gap-4 flex-1 min-h-0">
-            <div id="team-container" class="col-span-12 lg:col-span-5 grid grid-cols-2 gap-3 min-h-0"></div>
+        <!-- WORKSPACE -->
+        <div class="grid grid-cols-12 gap-3 flex-1 min-h-0 overflow-hidden">
+            <!-- ROSTERS (LEFT SIDE) -->
+            <div id="team-container" class="col-span-12 lg:col-span-5 grid gap-2 min-h-0 overflow-hidden">
+                <!-- JS Render -->
+            </div>
+
+            <!-- PICK ZONE (RIGHT SIDE) -->
             <div id="pick-zone" class="col-span-12 lg:col-span-7 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden">
                 <input type="text" id="search-input" oninput="searchPlayer()" placeholder="Tìm tên cầu thủ..." class="w-full p-4 bg-black border-2 border-gray-800 rounded-xl text-xl outline-none focus:border-yellow-500 italic text-white mb-4">
-                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-1 pb-4"></div>
+                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-1 pb-4">
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- ANNOUNCEMENT -->
     <div id="anno" class="hidden fixed bottom-12 left-1/2 -translate-x-1/2 z-[10000] bg-black/95 border-t-4 border-yellow-500 p-6 px-12 rounded-2xl text-center shadow-[0_0_80px_rgba(0,0,0,1)] anno-animation">
         <div class="text-sm italic font-bold text-yellow-500 uppercase mb-1 tracking-[0.3em]" id="anno-team">TEAM 01 ĐÃ CHỌN</div>
         <div class="text-5xl font-black fvpl-font italic text-white uppercase leading-none" id="anno-player">RONALDO</div>
@@ -83,7 +130,6 @@
         const db = getDatabase(app);
         const stateRef = ref(db, 'draft_state');
 
-        // ĐỊNH NGHĨA QUY TẮC ROUND
         const ROUND_RULES = [
             { name: "R1", picks: 1, time: 30, limit: 11 },
             { name: "R2", picks: 1, time: 30, limit: 11 },
@@ -92,25 +138,20 @@
             { name: "R5", picks: 2, time: 60, limit: 11 },
             { name: "R6", picks: 2, time: 60, limit: 11 },
             { name: "R7", picks: 2, time: 60, limit: 11 },
-            { name: "R8", picks: 99, time: 180, limit: 11 }, // Fill to 11
+            { name: "R8", picks: 99, time: 180, limit: 11 }, 
             { name: "R1_2", picks: 2, time: 60, limit: 23 },
             { name: "R2_2", picks: 2, time: 60, limit: 23 },
             { name: "R3_2", picks: 3, time: 90, limit: 23 },
             { name: "R4_2", picks: 2, time: 60, limit: 23 },
             { name: "R5_2", picks: 3, time: 90, limit: 23 },
-            { name: "R6_2", picks: 99, time: 180, limit: 23 } // Fill to 23
+            { name: "R6_2", picks: 99, time: 180, limit: 23 } 
         ];
 
         let database = [];
         const initialState = {
-            roundIdx: 0,
-            turnIdx: 0, // 0 to 3
-            picksThisTurn: 0,
+            roundIdx: 0, turnIdx: 0, picksThisTurn: 0,
             teams: Array.from({ length: 4 }, (_, i) => ({ id: i, name: `TEAM 0${i+1}`, roster: [] })),
-            pickedIds: [],
-            timer: 30,
-            isPaused: true,
-            currentPickGlobal: 0 // Để track snake chung
+            pickedIds: [], timer: 30, isPaused: true, currentPickGlobal: 0
         };
 
         let state = JSON.parse(JSON.stringify(initialState));
@@ -127,18 +168,29 @@
                     const cols = row.split(',');
                     return { id: cols[0]?.trim(), name: decodeHTML(cols[1]?.trim()), dob: cols[2]?.trim() };
                 }).filter(p => p.id && p.name);
-            } catch (e) {}
+            } catch (e) { console.error(e); }
         }
 
         window.doLogin = function() {
             userRole = document.getElementById('role-select').value;
             document.getElementById('screen-login').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
-            if (userRole === 'admin') document.getElementById('admin-controls').classList.remove('hidden');
-            if (userRole === 'viewer') {
-                document.getElementById('pick-zone').classList.add('hidden');
-                document.getElementById('team-container').className = "col-span-12 grid grid-cols-4 gap-4 h-full overflow-hidden";
+            
+            const container = document.getElementById('team-container');
+            const pickZone = document.getElementById('pick-zone');
+
+            if (userRole === 'admin') {
+                document.getElementById('admin-controls').classList.remove('hidden');
+                container.className = "col-span-12 lg:col-span-6 grid grid-cols-2 gap-2 min-h-0 overflow-hidden";
+                pickZone.className = "col-span-12 lg:col-span-6 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
+            } else if (userRole === 'viewer') {
+                pickZone.classList.add('hidden');
+                container.className = "col-span-12 grid grid-cols-4 gap-2 h-full overflow-hidden";
+            } else if (userRole.startsWith('player-')) {
+                container.className = "col-span-12 lg:col-span-4 grid grid-cols-1 gap-0 h-full overflow-hidden";
+                pickZone.className = "col-span-12 lg:col-span-8 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
             }
+
             loadCSV();
             syncFromFirebase();
         };
@@ -162,32 +214,15 @@
             return isReverse ? (3 - state.turnIdx) : state.turnIdx;
         }
 
-        function checkAutoSkip() {
-            if (userRole !== 'admin') return;
-            const round = ROUND_RULES[state.roundIdx];
-            const teamIdx = getCurrentTeamIdx();
-            const rosterLen = state.teams[teamIdx].roster ? state.teams[teamIdx].roster.length : 0;
-
-            // Nếu team đã đủ giới hạn của giai đoạn (11 hoặc 23)
-            if (rosterLen >= round.limit) {
-                nextTurn();
-            }
-        }
-
         function nextTurn() {
             state.picksThisTurn = 0;
             state.turnIdx++;
-            
             if (state.turnIdx > 3) {
                 state.turnIdx = 0;
                 state.roundIdx++;
-                
-                // Hết R6_2: Kiểm tra xem tất cả đủ 23 chưa
                 if (state.roundIdx >= ROUND_RULES.length) {
-                    const allDone = state.teams.every(t => t.roster && t.roster.length >= 23);
-                    if (!allDone) {
-                        state.roundIdx = ROUND_RULES.length - 1; // Lặp lại R6_2
-                    } else {
+                    state.roundIdx = ROUND_RULES.length - 1;
+                    if (state.teams.every(t => (t.roster || []).length >= 23)) {
                         state.isPaused = true;
                         alert("DRAFT HOÀN TẤT!");
                     }
@@ -202,30 +237,19 @@
         window.doPick = function(id) {
             const teamIdx = getCurrentTeamIdx();
             const round = ROUND_RULES[state.roundIdx];
-            
             if (userRole !== 'admin' && userRole !== `player-${teamIdx}`) return alert("KHÔNG PHẢI LƯỢT CỦA BẠN!");
-            
             const p = database.find(item => item.id === id);
-            const globalCount = state.pickedIds ? state.pickedIds.filter(pid => pid === id).length : 0;
-            const inTeam = state.teams[teamIdx].roster && state.teams[teamIdx].roster.some(item => item.id === id);
-
-            if (globalCount >= 1 || inTeam) return alert("Cầu thủ không khả dụng!");
-
+            const globalCount = (state.pickedIds || []).filter(pid => pid === id).length;
+            const inTeam = (state.teams[teamIdx].roster || []).some(item => item.id === id);
+            if (globalCount >= 3 || inTeam) return alert("Cầu thủ không khả dụng!");
             if (!state.teams[teamIdx].roster) state.teams[teamIdx].roster = [];
             state.teams[teamIdx].roster.push(p);
             if (!state.pickedIds) state.pickedIds = [];
             state.pickedIds.push(id);
             state.picksThisTurn++;
-            
             state.lastPickAction = { teamName: state.teams[teamIdx].name, playerName: p.name };
-
-            // Nếu đã pick đủ số lượng của Round hoặc đã đạt giới hạn đội hình
-            const currentRosterLen = state.teams[teamIdx].roster.length;
-            if (state.picksThisTurn >= round.picks || currentRosterLen >= round.limit) {
-                nextTurn();
-            } else {
-                set(stateRef, state);
-            }
+            if (state.picksThisTurn >= round.picks || state.teams[teamIdx].roster.length >= round.limit) nextTurn();
+            else set(stateRef, state);
             document.getElementById('search-input').value = '';
             document.getElementById('player-list').innerHTML = '';
         };
@@ -236,14 +260,14 @@
             listDiv.innerHTML = '';
             if (val.length < 2) return;
             const teamIdx = getCurrentTeamIdx();
-            database.filter(p => removeAccents(p.name).includes(val)).slice(0, 50).forEach(p => {
-                const globalCount = state.pickedIds ? state.pickedIds.filter(id => id === p.id).length : 0;
-                const inTeam = state.teams[teamIdx].roster && state.teams[teamIdx].roster.some(item => item.id === p.id);
-                if (globalCount >= 1 || inTeam) return;
+            database.filter(p => removeAccents(p.name).includes(val)).slice(0, 30).forEach(p => {
+                const globalCount = (state.pickedIds || []).filter(id => id === p.id).length;
+                const inTeam = (state.teams[teamIdx].roster || []).some(item => item.id === p.id);
+                if (globalCount >= 3 || inTeam) return;
                 const card = document.createElement('div');
-                card.className = `bg-gray-800 p-3 rounded-lg border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
-                card.innerHTML = `<div class="overflow-hidden"><div class="font-bold text-sm uppercase text-white truncate">${p.name}</div><div class="text-[9px] text-gray-500">${p.dob} • ${globalCount}/1</div></div>
-                                  <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-3 py-1 rounded font-black text-[10px]">PICK</button>`;
+                card.className = `bg-gray-800 p-2 rounded-lg border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
+                card.innerHTML = `<div class="overflow-hidden"><div class="font-bold text-[12px] uppercase text-white truncate">${p.name}</div><div class="text-[9px] text-gray-500">${p.dob} • ${globalCount}/3</div></div>
+                                  <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-2 py-1 rounded font-black text-[10px]">PICK</button>`;
                 listDiv.appendChild(card);
             });
         };
@@ -258,29 +282,35 @@
         };
 
         function renderUI() {
-            const teamIdx = getCurrentTeamIdx();
+            const currentTeamIdx = getCurrentTeamIdx();
             const round = ROUND_RULES[state.roundIdx];
             document.getElementById('display-role').innerText = userRole.toUpperCase();
-            document.getElementById('round-info').innerText = `${round.name} | ${state.teams[teamIdx]?.name} (${state.picksThisTurn}/${round.picks === 99 ? 'FILL' : round.picks})`;
+            document.getElementById('round-info').innerText = `${round.name} | ${state.teams[currentTeamIdx]?.name} (${state.picksThisTurn}/${round.picks === 99 ? 'FILL' : round.picks})`;
             
             const container = document.getElementById('team-container');
-            container.innerHTML = state.teams.map((team, tIdx) => {
-                const isActive = (tIdx === teamIdx);
+            let teamsToRender = (userRole.startsWith('player-')) 
+                ? [state.teams[parseInt(userRole.split('-')[1])]] 
+                : state.teams;
+
+            const slotClass = (userRole === 'admin') ? 'slot-admin' : 'slot-fit';
+
+            container.innerHTML = teamsToRender.map((team) => {
+                const isActive = (team.id === currentTeamIdx);
                 let slotsHtml = '';
                 for(let i=0; i<23; i++) {
                     const p = team.roster ? team.roster[i] : null;
-                    slotsHtml += `<div class="slot ${p ? 'slot-filled' : ''} ${i===11 ? 'mt-4 border-t border-dashed border-white/10 pt-2' : ''}">
-                        <span class="text-gray-600 mr-2 w-3 font-bold">${i+1}</span>
-                        <div class="flex-1 flex justify-between items-baseline overflow-hidden">
+                    slotsHtml += `<div class="${slotClass} ${p ? 'slot-filled' : ''}">
+                        <span class="slot-num">${i+1}</span>
+                        <div class="flex-1 flex justify-between items-center overflow-hidden">
                             <span class="truncate uppercase font-black text-white italic tracking-wide">${p ? p.name : ''}</span>
-                            <span class="text-[8px] text-gray-500 font-bold ml-2 shrink-0">${p ? p.dob : ''}</span>
+                            <span class="text-[9px] text-white/20 font-bold ml-1 shrink-0">${p ? p.dob : ''}</span>
                         </div>
-                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${tIdx}, ${i})" class="text-red-500 hover:text-white ml-2">✕</button>` : ''}
+                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${team.id}, ${i})" class="text-red-500 hover:text-white ml-2 text-lg">×</button>` : ''}
                     </div>`;
                 }
-                return `<div class="flex flex-col bg-gray-900 rounded-2xl border border-white/5 h-full ${isActive ? 'active-turn' : ''}">
+                return `<div class="flex flex-col bg-gray-900 rounded-xl border border-white/5 h-full overflow-hidden ${isActive ? 'active-turn' : ''}">
                     <div class="p-2 text-center font-black italic fvpl-font text-xs shrink-0 ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-500'} uppercase">${team.name} (${team.roster ? team.roster.length : 0})</div>
-                    <div class="flex-1 overflow-y-auto p-2 min-h-0">${slotsHtml}</div>
+                    <div class="flex-1 overflow-y-auto p-1 min-h-0">${slotsHtml}</div>
                 </div>`;
             }).join('');
             
@@ -288,7 +318,6 @@
             document.getElementById('pause-btn').innerText = state.isPaused ? "Bắt đầu" : "Tạm dừng";
             
             if (state.timer === 0 && userRole === 'admin' && !state.isPaused) nextTurn();
-            checkAutoSkip();
         }
 
         setInterval(() => {
@@ -300,6 +329,7 @@
 
         window.toggleTimer = function() { if(userRole === 'admin') { state.isPaused = !state.isPaused; set(stateRef, state); } };
         window.resetDraft = function() { if(userRole === 'admin' && confirm("Reset?")) set(stateRef, initialState); };
+        
         function showAnnouncement(teamName, playerName) {
             const anno = document.getElementById('anno');
             document.getElementById('anno-team').innerText = teamName + " ĐÃ CHỌN";
