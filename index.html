@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>DRAFT PRO - 16 TEAMS CENTER VIEW</title>
+    <title>DRAFT PRO - PRO LEAGUE SYSTEM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
@@ -12,55 +12,41 @@
         }
         .fvpl-font { font-family: Oswald, sans-serif; }
         .gold-text { color: #facc15; }
+        .active-turn { border: 2px solid #facc15; background: rgba(250, 204, 21, 0.1); box-shadow: 0 0 20px rgba(250, 204, 21, 0.2); }
         
-        /* Hiệu ứng Team đang chọn */
-        .active-turn { 
-            border: 2px solid #facc15 !important; 
-            background: rgba(250, 204, 21, 0.15) !important; 
-            box-shadow: 0 0 30px rgba(250, 204, 21, 0.3);
-            transform: scale(1.02);
-            z-index: 10;
-        }
-        
-        /* Slot Admin */
+        /* Slot cho Admin (Có scroll nên để chiều cao cố định) */
         .slot-admin { 
-            height: 30px; background: rgba(255,255,255,0.03); margin-bottom: 2px; 
-            display: flex; align-items: center; padding: 0 8px; font-size: 11px; 
-            border-left: 3px solid transparent; flex-shrink: 0; 
+            height: 34px; 
+            background: rgba(255,255,255,0.03); 
+            margin-bottom: 2px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 10px; 
+            font-size: 12px; 
+            border-left: 3px solid transparent; 
+            flex-shrink: 0; 
         }
 
-        /* Slot Viewer - Tối ưu cho 5 cột */
+        /* Slot cho Player/Viewer (Tối ưu để hiện đủ 23 người khi F11) */
         .slot-fit { 
-            height: calc((100vh - 220px) / 23);
-            min-height: 18px;
-            background: rgba(255,255,255,0.02); margin-bottom: 1px; 
-            display: flex; align-items: center; padding: 0 5px; font-size: 10px; 
-            border-left: 2px solid transparent; flex-shrink: 0; 
+            height: calc((100vh - 160px) / 23);
+            min-height: 22px;
+            background: rgba(255,255,255,0.02); 
+            margin-bottom: 1px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 8px; 
+            font-size: 11px; 
+            border-left: 3px solid transparent; 
+            flex-shrink: 0; 
         }
 
         .slot-filled { border-left-color: #facc15; background: rgba(250, 204, 21, 0.08); }
-        .slot-num { width: 15px; font-weight: bold; color: #555; font-size: 9px; }
-        
-        /* Container cho Stream */
-        .viewer-mode-container {
-            display: flex;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            gap: 12px;
-            padding: 10px 0;
-            scrollbar-width: none; /* Firefox */
-        }
-        .viewer-mode-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-
-        /* Độ rộng 5 cột trên 1 màn hình */
-        .viewer-column {
-            min-width: calc((100vw - 80px) / 5);
-            width: calc((100vw - 80px) / 5);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .slot-num { width: 20px; font-weight: bold; color: #555; font-size: 10px; }
         
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         
         @keyframes slideUp { from { transform: translate(-50%, 50px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
         .anno-animation { animation: slideUp 0.5s ease-out forwards; }
@@ -71,15 +57,14 @@
     <!-- LOGIN SCREEN -->
     <div id="screen-login" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
         <div class="bg-gray-900 p-8 rounded-2xl border-t-4 border-yellow-500 w-96 text-center shadow-2xl">
-            <h1 class="fvpl-font text-4xl italic font-black gold-text mb-6 uppercase tracking-widest">DRAFT PRO 16</h1>
+            <h1 class="fvpl-font text-4xl italic font-black gold-text mb-6 uppercase tracking-widest">DRAFT PRO</h1>
             <select id="role-select" class="w-full p-4 bg-black border border-gray-700 rounded text-white font-bold mb-6 outline-none focus:border-yellow-500">
                 <option value="admin">QUẢN TRỊ VIÊN (ADMIN)</option>
                 <option value="viewer">MÀN HÌNH KHÁN GIẢ (STREAM)</option>
-                <script>
-                    for(let i=0; i<16; i++) {
-                        document.write(`<option value="player-${i}">TEAM ${String(i+1).padStart(2, '0')}</option>`);
-                    }
-                </script>
+                <option value="player-0">TEAM 01</option>
+                <option value="player-1">TEAM 02</option>
+                <option value="player-2">TEAM 03</option>
+                <option value="player-3">TEAM 04</option>
             </select>
             <button onclick="doLogin()" class="w-full py-4 bg-yellow-600 text-black font-black fvpl-font italic text-xl rounded hover:bg-yellow-500 transition-all">VÀO PHÒNG DRAFT</button>
         </div>
@@ -107,13 +92,16 @@
 
         <!-- WORKSPACE -->
         <div class="grid grid-cols-12 gap-3 flex-1 min-h-0 overflow-hidden">
-            <div id="team-container" class="col-span-12 grid gap-2 min-h-0 overflow-hidden">
+            <!-- ROSTERS (LEFT SIDE) -->
+            <div id="team-container" class="col-span-12 lg:col-span-5 grid gap-2 min-h-0 overflow-hidden">
                 <!-- JS Render -->
             </div>
 
-            <div id="pick-zone" class="col-span-12 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden">
+            <!-- PICK ZONE (RIGHT SIDE) -->
+            <div id="pick-zone" class="col-span-12 lg:col-span-7 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden">
                 <input type="text" id="search-input" oninput="searchPlayer()" placeholder="Tìm tên cầu thủ..." class="w-full p-4 bg-black border-2 border-gray-800 rounded-xl text-xl outline-none focus:border-yellow-500 italic text-white mb-4">
-                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-1 pb-4"></div>
+                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-1 pb-4">
+                </div>
             </div>
         </div>
     </div>
@@ -140,22 +128,29 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const stateRef = ref(db, 'draft_state_16_final');
+        const stateRef = ref(db, 'draft_state');
 
         const ROUND_RULES = [
-            { name: "R1", picks: 1, time: 30, limit: 11 }, { name: "R2", picks: 1, time: 30, limit: 11 },
-            { name: "R3", picks: 1, time: 30, limit: 11 }, { name: "R4", picks: 2, time: 60, limit: 11 },
-            { name: "R5", picks: 2, time: 60, limit: 11 }, { name: "R6", picks: 2, time: 60, limit: 11 },
-            { name: "R7", picks: 2, time: 60, limit: 11 }, { name: "R8", picks: 99, time: 180, limit: 11 }, 
-            { name: "R1_2", picks: 2, time: 60, limit: 23 }, { name: "R2_2", picks: 2, time: 60, limit: 23 },
-            { name: "R3_2", picks: 3, time: 90, limit: 23 }, { name: "R4_2", picks: 2, time: 60, limit: 23 },
-            { name: "R5_2", picks: 3, time: 90, limit: 23 }, { name: "R6_2", picks: 99, time: 180, limit: 23 } 
+            { name: "R1", picks: 1, time: 30, limit: 11 },
+            { name: "R2", picks: 1, time: 30, limit: 11 },
+            { name: "R3", picks: 1, time: 30, limit: 11 },
+            { name: "R4", picks: 2, time: 60, limit: 11 },
+            { name: "R5", picks: 2, time: 60, limit: 11 },
+            { name: "R6", picks: 2, time: 60, limit: 11 },
+            { name: "R7", picks: 2, time: 60, limit: 11 },
+            { name: "R8", picks: 99, time: 180, limit: 11 }, 
+            { name: "R1_2", picks: 2, time: 60, limit: 23 },
+            { name: "R2_2", picks: 2, time: 60, limit: 23 },
+            { name: "R3_2", picks: 3, time: 90, limit: 23 },
+            { name: "R4_2", picks: 2, time: 60, limit: 23 },
+            { name: "R5_2", picks: 3, time: 90, limit: 23 },
+            { name: "R6_2", picks: 99, time: 180, limit: 23 } 
         ];
 
         let database = [];
         const initialState = {
             roundIdx: 0, turnIdx: 0, picksThisTurn: 0,
-            teams: Array.from({ length: 16 }, (_, i) => ({ id: i, name: `TEAM ${String(i+1).padStart(2, '0')}`, roster: [] })),
+            teams: Array.from({ length: 4 }, (_, i) => ({ id: i, name: `TEAM 0${i+1}`, roster: [] })),
             pickedIds: [], timer: 30, isPaused: true, currentPickGlobal: 0
         };
 
@@ -186,14 +181,14 @@
 
             if (userRole === 'admin') {
                 document.getElementById('admin-controls').classList.remove('hidden');
-                container.className = "col-span-12 lg:col-span-6 grid grid-cols-2 gap-2 h-full overflow-y-auto";
+                container.className = "col-span-12 lg:col-span-6 grid grid-cols-2 gap-2 min-h-0 overflow-hidden";
                 pickZone.className = "col-span-12 lg:col-span-6 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
             } else if (userRole === 'viewer') {
                 pickZone.classList.add('hidden');
-                container.className = "col-span-12 viewer-mode-container h-full";
+                container.className = "col-span-12 grid grid-cols-4 gap-2 h-full overflow-hidden";
             } else if (userRole.startsWith('player-')) {
-                container.className = "col-span-12 lg:col-span-3 grid grid-cols-1 h-full overflow-hidden";
-                pickZone.className = "col-span-12 lg:col-span-9 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
+                container.className = "col-span-12 lg:col-span-4 grid grid-cols-1 gap-0 h-full overflow-hidden";
+                pickZone.className = "col-span-12 lg:col-span-8 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
             }
 
             loadCSV();
@@ -210,38 +205,28 @@
                     }
                     state = val;
                     renderUI();
-                    if (userRole === 'viewer') centerActiveTeam();
                 } else { state = JSON.parse(JSON.stringify(initialState)); renderUI(); }
             });
         }
 
         function getCurrentTeamIdx() {
-            const isReverse = Math.floor(state.currentPickGlobal / 16) % 2 !== 0;
-            return isReverse ? (15 - state.turnIdx) : state.turnIdx;
-        }
-
-        function centerActiveTeam() {
-            const container = document.getElementById('team-container');
-            const activeCard = container.querySelector('.active-turn');
-            if (activeCard) {
-                const containerWidth = container.offsetWidth;
-                const cardWidth = activeCard.offsetWidth;
-                const cardLeft = activeCard.offsetLeft;
-                // Cuộn sao cho cột active nằm chính giữa
-                container.scrollTo({
-                    left: cardLeft - (containerWidth / 2) + (cardWidth / 2),
-                    behavior: 'smooth'
-                });
-            }
+            const isReverse = Math.floor(state.currentPickGlobal / 4) % 2 !== 0;
+            return isReverse ? (3 - state.turnIdx) : state.turnIdx;
         }
 
         function nextTurn() {
             state.picksThisTurn = 0;
             state.turnIdx++;
-            if (state.turnIdx > 15) {
+            if (state.turnIdx > 3) {
                 state.turnIdx = 0;
                 state.roundIdx++;
-                if (state.roundIdx >= ROUND_RULES.length) state.roundIdx = ROUND_RULES.length - 1;
+                if (state.roundIdx >= ROUND_RULES.length) {
+                    state.roundIdx = ROUND_RULES.length - 1;
+                    if (state.teams.every(t => (t.roster || []).length >= 23)) {
+                        state.isPaused = true;
+                        alert("DRAFT HOÀN TẤT!");
+                    }
+                }
             }
             state.currentPickGlobal++;
             const nextRound = ROUND_RULES[state.roundIdx];
@@ -252,9 +237,11 @@
         window.doPick = function(id) {
             const teamIdx = getCurrentTeamIdx();
             const round = ROUND_RULES[state.roundIdx];
-            if (userRole !== 'admin' && userRole !== `player-${teamIdx}`) return alert("KHÔNG PHẢI LƯỢT!");
+            if (userRole !== 'admin' && userRole !== `player-${teamIdx}`) return alert("KHÔNG PHẢI LƯỢT CỦA BẠN!");
             const p = database.find(item => item.id === id);
-            if ((state.pickedIds || []).filter(pid => pid === id).length >= 3) return alert("Hết slot!");
+            const globalCount = (state.pickedIds || []).filter(pid => pid === id).length;
+            const inTeam = (state.teams[teamIdx].roster || []).some(item => item.id === id);
+            if (globalCount >= 3 || inTeam) return alert("Cầu thủ không khả dụng!");
             if (!state.teams[teamIdx].roster) state.teams[teamIdx].roster = [];
             state.teams[teamIdx].roster.push(p);
             if (!state.pickedIds) state.pickedIds = [];
@@ -272,13 +259,15 @@
             const listDiv = document.getElementById('player-list');
             listDiv.innerHTML = '';
             if (val.length < 2) return;
-            database.filter(p => removeAccents(p.name).includes(val)).slice(0, 20).forEach(p => {
-                const count = (state.pickedIds || []).filter(id => id === p.id).length;
-                if (count >= 3) return;
+            const teamIdx = getCurrentTeamIdx();
+            database.filter(p => removeAccents(p.name).includes(val)).slice(0, 30).forEach(p => {
+                const globalCount = (state.pickedIds || []).filter(id => id === p.id).length;
+                const inTeam = (state.teams[teamIdx].roster || []).some(item => item.id === p.id);
+                if (globalCount >= 3 || inTeam) return;
                 const card = document.createElement('div');
-                card.className = `bg-gray-800 p-2 rounded border border-gray-700 flex justify-between items-center cursor-pointer`;
-                card.innerHTML = `<div><div class="font-bold text-xs text-white">${p.name}</div><div class="text-[10px] text-gray-400">${p.dob} (${count}/3)</div></div>
-                                  <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-2 py-1 rounded text-[10px] font-bold">PICK</button>`;
+                card.className = `bg-gray-800 p-2 rounded-lg border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
+                card.innerHTML = `<div class="overflow-hidden"><div class="font-bold text-[12px] uppercase text-white truncate">${p.name}</div><div class="text-[9px] text-gray-500">${p.dob} • ${globalCount}/3</div></div>
+                                  <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-2 py-1 rounded font-black text-[10px]">PICK</button>`;
                 listDiv.appendChild(card);
             });
         };
@@ -293,10 +282,10 @@
         };
 
         function renderUI() {
-            const currentIdx = getCurrentTeamIdx();
+            const currentTeamIdx = getCurrentTeamIdx();
             const round = ROUND_RULES[state.roundIdx];
             document.getElementById('display-role').innerText = userRole.toUpperCase();
-            document.getElementById('round-info').innerText = `${round.name} | ${state.teams[currentIdx]?.name} (${state.picksThisTurn}/${round.picks === 99 ? 'FILL' : round.picks})`;
+            document.getElementById('round-info').innerText = `${round.name} | ${state.teams[currentTeamIdx]?.name} (${state.picksThisTurn}/${round.picks === 99 ? 'FILL' : round.picks})`;
             
             const container = document.getElementById('team-container');
             let teamsToRender = (userRole.startsWith('player-')) 
@@ -304,38 +293,37 @@
                 : state.teams;
 
             const slotClass = (userRole === 'admin') ? 'slot-admin' : 'slot-fit';
-            const colClass = (userRole === 'viewer') ? 'viewer-column' : '';
 
             container.innerHTML = teamsToRender.map((team) => {
-                const isActive = (team.id === currentIdx);
-                let slots = '';
+                const isActive = (team.id === currentTeamIdx);
+                let slotsHtml = '';
                 for(let i=0; i<23; i++) {
                     const p = team.roster ? team.roster[i] : null;
-                    slots += `<div class="${slotClass} ${p ? 'slot-filled' : ''}">
+                    slotsHtml += `<div class="${slotClass} ${p ? 'slot-filled' : ''}">
                         <span class="slot-num">${i+1}</span>
                         <div class="flex-1 flex justify-between items-center overflow-hidden">
-                            <span class="truncate uppercase font-black text-white italic">${p ? p.name : ''}</span>
-                            <span class="text-[8px] text-white/20 font-bold ml-1">${p ? p.dob : ''}</span>
+                            <span class="truncate uppercase font-black text-white italic tracking-wide">${p ? p.name : ''}</span>
+                            <span class="text-[9px] text-white/20 font-bold ml-1 shrink-0">${p ? p.dob : ''}</span>
                         </div>
-                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${team.id}, ${i})" class="text-red-500 ml-2">×</button>` : ''}
+                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${team.id}, ${i})" class="text-red-500 hover:text-white ml-2 text-lg">×</button>` : ''}
                     </div>`;
                 }
-                return `<div class="flex flex-col bg-gray-900 rounded-xl border border-white/10 h-full overflow-hidden flex-shrink-0 ${colClass} ${isActive ? 'active-turn' : ''}">
-                    <div class="p-2 text-center font-black italic fvpl-font text-[11px] shrink-0 ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-500'} uppercase">${team.name}</div>
-                    <div class="flex-1 overflow-y-auto p-1">${slots}</div>
+                return `<div class="flex flex-col bg-gray-900 rounded-xl border border-white/5 h-full overflow-hidden ${isActive ? 'active-turn' : ''}">
+                    <div class="p-2 text-center font-black italic fvpl-font text-xs shrink-0 ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-500'} uppercase">${team.name} (${team.roster ? team.roster.length : 0})</div>
+                    <div class="flex-1 overflow-y-auto p-1 min-h-0">${slotsHtml}</div>
                 </div>`;
             }).join('');
             
             document.getElementById('timer-display').innerText = `${String(state.timer).padStart(2, '0')}`;
             document.getElementById('pause-btn').innerText = state.isPaused ? "Bắt đầu" : "Tạm dừng";
+            
+            if (state.timer === 0 && userRole === 'admin' && !state.isPaused) nextTurn();
         }
 
         setInterval(() => {
             if (userRole === 'admin' && !state.isPaused && state.timer > 0) {
                 state.timer--;
                 set(stateRef, state);
-            } else if (state.timer === 0 && userRole === 'admin' && !state.isPaused) {
-                nextTurn();
             }
         }, 1000);
 
