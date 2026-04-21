@@ -61,7 +61,7 @@
             <select id="role-select" class="w-full p-4 bg-black border border-gray-700 rounded text-white font-bold mb-6 outline-none focus:border-yellow-500">
                 <option value="admin">QUẢN TRỊ VIÊN (ADMIN)</option>
                 <option value="viewer">MÀN HÌNH KHÁN GIẢ (STREAM)</option>
-                <option value="player-0">NGUYÊN CHƯƠNG</option>
+                <option value="player-0">TEAM 01</option>
                 <option value="player-1">TEAM 02</option>
                 <option value="player-2">TEAM 03</option>
                 <option value="player-3">TEAM 04</option>
@@ -211,13 +211,13 @@
 
         function getCurrentTeamIdx() {
             const isReverse = Math.floor(state.currentPickGlobal / 4) % 2 !== 0;
-            return isReverse ? (1 - state.turnIdx) : state.turnIdx;
+            return isReverse ? (3 - state.turnIdx) : state.turnIdx;
         }
 
         function nextTurn() {
             state.picksThisTurn = 0;
             state.turnIdx++;
-            if (state.turnIdx > 1) {
+            if (state.turnIdx > 3) {
                 state.turnIdx = 0;
                 state.roundIdx++;
                 if (state.roundIdx >= ROUND_RULES.length) {
