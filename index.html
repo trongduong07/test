@@ -61,7 +61,7 @@
             <select id="role-select" class="w-full p-4 bg-black border border-gray-700 rounded text-white font-bold mb-6 outline-none focus:border-yellow-500">
                 <option value="admin">QUẢN TRỊ VIÊN (ADMIN)</option>
                 <option value="viewer">MÀN HÌNH KHÁN GIẢ (STREAM)</option>
-                <option value="player-0">TEAM 01</option>
+                <option value="player-0">NGUYÊN CHƯƠNG</option>
                 <option value="player-1">TEAM 02</option>
                 <option value="player-2">TEAM 03</option>
                 <option value="player-3">TEAM 04</option>
@@ -211,13 +211,13 @@
 
         function getCurrentTeamIdx() {
             const isReverse = Math.floor(state.currentPickGlobal / 4) % 2 !== 0;
-            return isReverse ? (3 - state.turnIdx) : state.turnIdx;
+            return isReverse ? (1 - state.turnIdx) : state.turnIdx;
         }
 
         function nextTurn() {
             state.picksThisTurn = 0;
             state.turnIdx++;
-            if (state.turnIdx > 3) {
+            if (state.turnIdx > 1) {
                 state.turnIdx = 0;
                 state.roundIdx++;
                 if (state.roundIdx >= ROUND_RULES.length) {
@@ -241,7 +241,7 @@
             const p = database.find(item => item.id === id);
             const globalCount = (state.pickedIds || []).filter(pid => pid === id).length;
             const inTeam = (state.teams[teamIdx].roster || []).some(item => item.id === id);
-            if (globalCount >= 3 || inTeam) return alert("Cầu thủ không khả dụng!");
+            if (globalCount >= 1 || inTeam) return alert("Cầu thủ không khả dụng!");
             if (!state.teams[teamIdx].roster) state.teams[teamIdx].roster = [];
             state.teams[teamIdx].roster.push(p);
             if (!state.pickedIds) state.pickedIds = [];
@@ -263,10 +263,10 @@
             database.filter(p => removeAccents(p.name).includes(val)).slice(0, 30).forEach(p => {
                 const globalCount = (state.pickedIds || []).filter(id => id === p.id).length;
                 const inTeam = (state.teams[teamIdx].roster || []).some(item => item.id === p.id);
-                if (globalCount >= 3 || inTeam) return;
+                if (globalCount >= 1 || inTeam) return;
                 const card = document.createElement('div');
                 card.className = `bg-gray-800 p-2 rounded-lg border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
-                card.innerHTML = `<div class="overflow-hidden"><div class="font-bold text-[12px] uppercase text-white truncate">${p.name}</div><div class="text-[9px] text-gray-500">${p.dob} • ${globalCount}/3</div></div>
+                card.innerHTML = `<div class="overflow-hidden"><div class="font-bold text-[12px] uppercase text-white truncate">${p.name}</div><div class="text-[9px] text-gray-500">${p.dob} • ${globalCount}/1</div></div>
                                   <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-2 py-1 rounded font-black text-[10px]">PICK</button>`;
                 listDiv.appendChild(card);
             });
