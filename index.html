@@ -14,23 +14,21 @@
         .gold-text { color: #facc15; }
         .active-turn { border: 2px solid #facc15; background: rgba(250, 204, 21, 0.1); box-shadow: 0 0 20px rgba(250, 204, 21, 0.2); }
         
-        /* Slot cho Admin (Có scroll nên để chiều cao cố định) */
         .slot-admin { 
-            height: 34px; 
+            height: 38px; 
             background: rgba(255,255,255,0.03); 
             margin-bottom: 2px; 
             display: flex; 
             align-items: center; 
             padding: 0 10px; 
-            font-size: 12px; 
+            font-size: 13px; 
             border-left: 3px solid transparent; 
             flex-shrink: 0; 
         }
 
-        /* Slot cho Player/Viewer (Tối ưu để hiện đủ 23 người khi F11) */
         .slot-fit { 
-            height: calc((100vh - 160px) / 23);
-            min-height: 22px;
+            height: calc((100vh - 180px) / 23);
+            min-height: 24px;
             background: rgba(255,255,255,0.02); 
             margin-bottom: 1px; 
             display: flex; 
@@ -42,11 +40,23 @@
         }
 
         .slot-filled { border-left-color: #facc15; background: rgba(250, 204, 21, 0.08); }
-        .slot-num { width: 20px; font-weight: bold; color: #555; font-size: 10px; }
+        .slot-num { width: 22px; font-weight: bold; color: #666; font-size: 10px; }
         
+        /* Hiển thị DOB nổi bật */
+        .dob-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 11px;
+            margin-left: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         
         @keyframes slideUp { from { transform: translate(-50%, 50px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
         .anno-animation { animation: slideUp 0.5s ease-out forwards; }
@@ -83,7 +93,7 @@
                     <div id="round-info" class="text-xl font-black fvpl-font italic uppercase text-white leading-none tracking-tight">ROUND INFO</div>
                 </div>
             </div>
-            <div id="timer-display" class="text-5xl font-black fvpl-font italic gold-text tracking-tighter">30</div>
+            <div id="timer-display" class="text-6xl font-black fvpl-font italic gold-text tracking-tighter">00</div>
             <div id="admin-controls" class="hidden flex gap-2">
                 <button onclick="toggleTimer()" id="pause-btn" class="bg-blue-600 px-4 py-2 rounded text-[10px] font-bold uppercase italic hover:bg-blue-500 transition-all">Bắt đầu</button>
                 <button onclick="resetDraft()" class="bg-red-700 px-4 py-2 rounded text-[10px] font-bold uppercase italic hover:bg-red-600 transition-all">Reset</button>
@@ -92,16 +102,10 @@
 
         <!-- WORKSPACE -->
         <div class="grid grid-cols-12 gap-3 flex-1 min-h-0 overflow-hidden">
-            <!-- ROSTERS (LEFT SIDE) -->
-            <div id="team-container" class="col-span-12 lg:col-span-5 grid gap-2 min-h-0 overflow-hidden">
-                <!-- JS Render -->
-            </div>
-
-            <!-- PICK ZONE (RIGHT SIDE) -->
+            <div id="team-container" class="col-span-12 lg:col-span-5 grid gap-2 min-h-0 overflow-hidden"></div>
             <div id="pick-zone" class="col-span-12 lg:col-span-7 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden">
                 <input type="text" id="search-input" oninput="searchPlayer()" placeholder="Tìm tên cầu thủ..." class="w-full p-4 bg-black border-2 border-gray-800 rounded-xl text-xl outline-none focus:border-yellow-500 italic text-white mb-4">
-                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-1 pb-4">
-                </div>
+                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-2 content-start pr-1 pb-4"></div>
             </div>
         </div>
     </div>
@@ -114,7 +118,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCfbFKpqUxCUUCnYS7ZrHS-pfwbmQ4_dFk",
@@ -138,27 +142,26 @@
             { name: "R5", picks: 2, time: 60, limit: 11 },
             { name: "R6", picks: 2, time: 60, limit: 11 },
             { name: "R7", picks: 2, time: 60, limit: 11 },
-            { name: "R8", picks: 99, time: 180, limit: 11 }, 
+            { name: "R8 (BỔ SUNG)", picks: 99, time: 180, limit: 11 }, 
             { name: "R1_2", picks: 2, time: 60, limit: 23 },
             { name: "R2_2", picks: 2, time: 60, limit: 23 },
             { name: "R3_2", picks: 3, time: 90, limit: 23 },
             { name: "R4_2", picks: 2, time: 60, limit: 23 },
             { name: "R5_2", picks: 3, time: 90, limit: 23 },
-            { name: "R6_2", picks: 99, time: 180, limit: 23 } 
+            { name: "R6_2 (BỔ SUNG)", picks: 99, time: 180, limit: 23 } 
         ];
 
         let database = [];
         const initialState = {
             roundIdx: 0, turnIdx: 0, picksThisTurn: 0,
             teams: Array.from({ length: 4 }, (_, i) => ({ id: i, name: `TEAM 0${i+1}`, roster: [] })),
-            pickedIds: [], timer: 30, isPaused: true, currentPickGlobal: 0
+            pickedIds: [], endTime: 0, isPaused: true, currentPickGlobal: 0
         };
 
         let state = JSON.parse(JSON.stringify(initialState));
         let userRole = '';
 
         function removeAccents(str) { return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase() : ""; }
-        function decodeHTML(text) { const txt = document.createElement("textarea"); txt.innerHTML = text; return txt.value; }
 
         async function loadCSV() {
             try {
@@ -166,9 +169,9 @@
                 const text = await resp.text();
                 database = text.split('\n').filter(r => r.trim() !== '').slice(1).map(row => {
                     const cols = row.split(',');
-                    return { id: cols[0]?.trim(), name: decodeHTML(cols[1]?.trim()), dob: cols[2]?.trim() };
+                    return { id: cols[0]?.trim(), name: cols[1]?.trim(), dob: cols[2]?.trim() };
                 }).filter(p => p.id && p.name);
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Lỗi load CSV:", e); }
         }
 
         window.doLogin = function() {
@@ -182,7 +185,6 @@
             if (userRole === 'admin') {
                 document.getElementById('admin-controls').classList.remove('hidden');
                 container.className = "col-span-12 lg:col-span-6 grid grid-cols-2 gap-2 min-h-0 overflow-hidden";
-                pickZone.className = "col-span-12 lg:col-span-6 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
             } else if (userRole === 'viewer') {
                 pickZone.classList.add('hidden');
                 container.className = "col-span-12 grid grid-cols-4 gap-2 h-full overflow-hidden";
@@ -205,7 +207,11 @@
                     }
                     state = val;
                     renderUI();
-                } else { state = JSON.parse(JSON.stringify(initialState)); renderUI(); }
+                    checkAutoSkip(); // Kiểm tra nếu đội này đã đủ người thì bỏ qua
+                } else { 
+                    state = JSON.parse(JSON.stringify(initialState)); 
+                    renderUI(); 
+                }
             });
         }
 
@@ -214,42 +220,78 @@
             return isReverse ? (3 - state.turnIdx) : state.turnIdx;
         }
 
+        // Logic tự động bỏ qua nếu đã đủ người (Dành cho Round 8/14)
+        function checkAutoSkip() {
+            const teamIdx = getCurrentTeamIdx();
+            const round = ROUND_RULES[state.roundIdx];
+            const roster = state.teams[teamIdx].roster || [];
+            
+            if (roster.length >= round.limit && !state.isPaused) {
+                console.log(`Team ${teamIdx + 1} đã đủ ${round.limit} người. Tự động chuyển...`);
+                nextTurn();
+            }
+        }
+
         function nextTurn() {
-            state.picksThisTurn = 0;
-            state.turnIdx++;
-            if (state.turnIdx > 3) {
-                state.turnIdx = 0;
-                state.roundIdx++;
-                if (state.roundIdx >= ROUND_RULES.length) {
-                    state.roundIdx = ROUND_RULES.length - 1;
-                    if (state.teams.every(t => (t.roster || []).length >= 23)) {
-                        state.isPaused = true;
-                        alert("DRAFT HOÀN TẤT!");
+            runTransaction(stateRef, (currentState) => {
+                if (!currentState) return currentState;
+                
+                currentState.picksThisTurn = 0;
+                currentState.turnIdx++;
+                
+                if (currentState.turnIdx > 3) {
+                    currentState.turnIdx = 0;
+                    currentState.roundIdx++;
+                    if (currentState.roundIdx >= ROUND_RULES.length) {
+                        currentState.roundIdx = ROUND_RULES.length - 1;
+                        currentState.isPaused = true;
+                        return currentState;
                     }
                 }
-            }
-            state.currentPickGlobal++;
-            const nextRound = ROUND_RULES[state.roundIdx];
-            state.timer = nextRound ? nextRound.time : 30;
-            set(stateRef, state);
+                
+                currentState.currentPickGlobal++;
+                const nextRound = ROUND_RULES[currentState.roundIdx];
+                currentState.endTime = Date.now() + (nextRound.time * 1000);
+                return currentState;
+            });
         }
 
         window.doPick = function(id) {
             const teamIdx = getCurrentTeamIdx();
             const round = ROUND_RULES[state.roundIdx];
+            
             if (userRole !== 'admin' && userRole !== `player-${teamIdx}`) return alert("KHÔNG PHẢI LƯỢT CỦA BẠN!");
+            
             const p = database.find(item => item.id === id);
-            const globalCount = (state.pickedIds || []).filter(pid => pid === id).length;
-            const inTeam = (state.teams[teamIdx].roster || []).some(item => item.id === id);
-            if (globalCount >= 1 || inTeam) return alert("Cầu thủ không khả dụng!");
-            if (!state.teams[teamIdx].roster) state.teams[teamIdx].roster = [];
-            state.teams[teamIdx].roster.push(p);
-            if (!state.pickedIds) state.pickedIds = [];
-            state.pickedIds.push(id);
-            state.picksThisTurn++;
-            state.lastPickAction = { teamName: state.teams[teamIdx].name, playerName: p.name };
-            if (state.picksThisTurn >= round.picks || state.teams[teamIdx].roster.length >= round.limit) nextTurn();
-            else set(stateRef, state);
+            const isPicked = (state.pickedIds || []).includes(id);
+            if (isPicked) return alert("Cầu thủ đã được chọn!");
+
+            runTransaction(stateRef, (currentState) => {
+                if (!currentState) return currentState;
+                const tIdx = getCurrentTeamIdx();
+                if (!currentState.teams[tIdx].roster) currentState.teams[tIdx].roster = [];
+                
+                currentState.teams[tIdx].roster.push(p);
+                if (!currentState.pickedIds) currentState.pickedIds = [];
+                currentState.pickedIds.push(id);
+                currentState.picksThisTurn++;
+                currentState.lastPickAction = { teamName: currentState.teams[tIdx].name, playerName: p.name };
+
+                const currentRosterLen = currentState.teams[tIdx].roster.length;
+                if (currentState.picksThisTurn >= round.picks || currentRosterLen >= round.limit) {
+                    currentState.picksThisTurn = 0;
+                    currentState.turnIdx++;
+                    if (currentState.turnIdx > 3) {
+                        currentState.turnIdx = 0;
+                        currentState.roundIdx++;
+                    }
+                    currentState.currentPickGlobal++;
+                    const nextRound = ROUND_RULES[currentState.roundIdx] || round;
+                    currentState.endTime = Date.now() + (nextRound.time * 1000);
+                }
+                return currentState;
+            });
+
             document.getElementById('search-input').value = '';
             document.getElementById('player-list').innerHTML = '';
         };
@@ -259,15 +301,18 @@
             const listDiv = document.getElementById('player-list');
             listDiv.innerHTML = '';
             if (val.length < 2) return;
-            const teamIdx = getCurrentTeamIdx();
+
             database.filter(p => removeAccents(p.name).includes(val)).slice(0, 30).forEach(p => {
-                const globalCount = (state.pickedIds || []).filter(id => id === p.id).length;
-                const inTeam = (state.teams[teamIdx].roster || []).some(item => item.id === p.id);
-                if (globalCount >= 1 || inTeam) return;
+                const isPicked = (state.pickedIds || []).includes(p.id);
+                if (isPicked) return;
                 const card = document.createElement('div');
-                card.className = `bg-gray-800 p-2 rounded-lg border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
-                card.innerHTML = `<div class="overflow-hidden"><div class="font-bold text-[12px] uppercase text-white truncate">${p.name}</div><div class="text-[9px] text-gray-500">${p.dob} • ${globalCount}/1</div></div>
-                                  <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-2 py-1 rounded font-black text-[10px]">PICK</button>`;
+                card.className = `bg-gray-800 p-3 rounded-xl border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
+                card.innerHTML = `
+                    <div class="overflow-hidden">
+                        <div class="font-bold text-sm uppercase text-white truncate">${p.name}</div>
+                        <div class="mt-1"><span class="dob-badge">${p.dob}</span></div>
+                    </div>
+                    <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-4 py-2 rounded font-black text-xs ml-2">PICK</button>`;
                 listDiv.appendChild(card);
             });
         };
@@ -285,7 +330,9 @@
             const currentTeamIdx = getCurrentTeamIdx();
             const round = ROUND_RULES[state.roundIdx];
             document.getElementById('display-role').innerText = userRole.toUpperCase();
-            document.getElementById('round-info').innerText = `${round.name} | ${state.teams[currentTeamIdx]?.name} (${state.picksThisTurn}/${round.picks === 99 ? 'FILL' : round.picks})`;
+            
+            const limitStr = round.picks === 99 ? `ĐẾN KHI ĐỦ ${round.limit}` : `${state.picksThisTurn}/${round.picks}`;
+            document.getElementById('round-info').innerText = `${round.name} | ${state.teams[currentTeamIdx]?.name} (${limitStr})`;
             
             const container = document.getElementById('team-container');
             let teamsToRender = (userRole.startsWith('player-')) 
@@ -296,39 +343,69 @@
 
             container.innerHTML = teamsToRender.map((team) => {
                 const isActive = (team.id === currentTeamIdx);
+                const isFull = (team.roster?.length >= round.limit);
+                
                 let slotsHtml = '';
                 for(let i=0; i<23; i++) {
                     const p = team.roster ? team.roster[i] : null;
                     slotsHtml += `<div class="${slotClass} ${p ? 'slot-filled' : ''}">
-                        <span class="slot-num">${i+1}</span>
+                        <span class="slot-num">${String(i+1).padStart(2, '0')}</span>
                         <div class="flex-1 flex justify-between items-center overflow-hidden">
                             <span class="truncate uppercase font-black text-white italic tracking-wide">${p ? p.name : ''}</span>
-                            <span class="text-[9px] text-white/20 font-bold ml-1 shrink-0">${p ? p.dob : ''}</span>
+                            ${p ? `<span class="dob-badge">${p.dob}</span>` : ''}
                         </div>
-                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${team.id}, ${i})" class="text-red-500 hover:text-white ml-2 text-lg">×</button>` : ''}
+                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${team.id}, ${i})" class="text-red-500 hover:text-white ml-2 text-xl font-bold">×</button>` : ''}
                     </div>`;
                 }
-                return `<div class="flex flex-col bg-gray-900 rounded-xl border border-white/5 h-full overflow-hidden ${isActive ? 'active-turn' : ''}">
-                    <div class="p-2 text-center font-black italic fvpl-font text-xs shrink-0 ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-500'} uppercase">${team.name} (${team.roster ? team.roster.length : 0})</div>
+
+                // Nếu là round bổ sung, chỉ hiện vùng chọn nếu chưa đủ người
+                const hideStatus = (round.picks === 99 && isFull && !userRole.startsWith('player')) ? 'opacity-40 grayscale' : '';
+
+                return `<div class="flex flex-col bg-gray-900 rounded-xl border border-white/5 h-full overflow-hidden ${isActive ? 'active-turn' : ''} ${hideStatus}">
+                    <div class="p-2 text-center font-black italic fvpl-font text-xs shrink-0 ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-500'} uppercase">
+                        ${team.name} (${team.roster ? team.roster.length : 0}/${round.limit})
+                    </div>
                     <div class="flex-1 overflow-y-auto p-1 min-h-0">${slotsHtml}</div>
                 </div>`;
             }).join('');
             
-            document.getElementById('timer-display').innerText = `${String(state.timer).padStart(2, '0')}`;
             document.getElementById('pause-btn').innerText = state.isPaused ? "Bắt đầu" : "Tạm dừng";
-            
-            if (state.timer === 0 && userRole === 'admin' && !state.isPaused) nextTurn();
         }
 
+        // Timer chạy độc lập dựa trên giờ hệ thống
         setInterval(() => {
-            if (userRole === 'admin' && !state.isPaused && state.timer > 0) {
-                state.timer--;
-                set(stateRef, state);
+            if (state.isPaused || !state.endTime) {
+                document.getElementById('timer-display').innerText = "00";
+                return;
+            }
+
+            const now = Date.now();
+            const diff = Math.max(0, Math.floor((state.endTime - now) / 1000));
+            document.getElementById('timer-display').innerText = String(diff).padStart(2, '0');
+
+            if (diff <= 0) {
+                // Chỉ thực hiện chuyển lượt nếu là người đầu tiên phát hiện (để tránh xung đột)
+                // Admin ưu tiên thực hiện, nếu không có admin ai cũng có quyền trigger
+                nextTurn();
             }
         }, 1000);
 
-        window.toggleTimer = function() { if(userRole === 'admin') { state.isPaused = !state.isPaused; set(stateRef, state); } };
-        window.resetDraft = function() { if(userRole === 'admin' && confirm("Reset?")) set(stateRef, initialState); };
+        window.toggleTimer = function() { 
+            if(userRole !== 'admin') return;
+            const round = ROUND_RULES[state.roundIdx];
+            runTransaction(stateRef, (currentState) => {
+                if (!currentState) return currentState;
+                currentState.isPaused = !currentState.isPaused;
+                if (!currentState.isPaused) {
+                    currentState.endTime = Date.now() + (round.time * 1000);
+                }
+                return currentState;
+            });
+        };
+
+        window.resetDraft = function() { 
+            if(userRole === 'admin' && confirm("Bạn có chắc chắn muốn Reset toàn bộ Draft?")) set(stateRef, initialState); 
+        };
         
         function showAnnouncement(teamName, playerName) {
             const anno = document.getElementById('anno');
