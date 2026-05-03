@@ -252,7 +252,7 @@
 
             const p = database.find(item => item.id === id);
             const pickCount = state.pickedIds ? (state.pickedIds[id] || 0) : 0;
-            if (pickCount >= 3) return alert("Cầu thủ này đã được chọn đủ 3 lần!");
+            if (pickCount >= 1) return alert("Cầu thủ này đã được chọn!");
             
             runTransaction(stateRef, (cur) => {
                 if (!cur || cur.isPaused) return cur;
@@ -260,7 +260,7 @@
                 const roster = cur.teams[tIdx].roster || [];
                 
                 if (roster.some(item => item.id === id)) return; 
-                if (cur.pickedIds && (cur.pickedIds[id] || 0) >= 3) return;
+                if (cur.pickedIds && (cur.pickedIds[id] || 0) >= 1) return;
 
                 cur.teams[tIdx].roster = [...roster, p];
                 if (!cur.pickedIds) cur.pickedIds = {};
@@ -271,7 +271,7 @@
                 if (cur.picksThisTurn >= round.p || cur.teams[tIdx].roster.length >= round.l) {
                     cur.picksThisTurn = 0;
                     cur.turnIdx++;
-                    if (cur.turnIdx > 3) {
+                    if (cur.turnIdx > 1) {
                         cur.turnIdx = 0;
                         cur.roundIdx++;
                     }
@@ -298,7 +298,7 @@
             database.filter(p => removeAccents(p.name).includes(val)).slice(0, 20).forEach(p => {
                 const count = state.pickedIds ? (state.pickedIds[p.id] || 0) : 0;
                 const inMyTeam = myRoster.some(item => item.id === p.id);
-                if (count >= 3 || inMyTeam) return;
+                if (count >= 1 || inMyTeam) return;
 
                 const card = document.createElement('div');
                 const btnOpacity = state.isPaused ? "opacity-50 cursor-not-allowed" : "";
@@ -309,7 +309,7 @@
                         <div class="font-bold text-xs uppercase text-white truncate">${p.name}</div>
                         <div class="flex items-center mt-1">
                             <span class="dob-badge">${p.dob}</span>
-                            <span class="text-[10px] ml-2 text-gray-500">${count}/3</span>
+                            <span class="text-[10px] ml-2 text-gray-500">${count}/1</span>
                         </div>
                     </div>
                     <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-3 py-1 rounded font-black text-[10px] ${btnOpacity}">PICK</button>`;
