@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>DRAFT PRO 5 - STRICT SYSTEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
+        body { 
+            background: #08080c; color: white; font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden; height: 100vh; width: 100vw; 
+        }
+        .fvpl-font { font-family: Oswald, sans-serif; }
+        .gold-text { color: #facc15; }
+        
+        .active-turn { 
+            border: 2px solid #facc15 !important; 
+            background: rgba(250, 204, 21, 0.1) !important; 
+            box-shadow: 0 0 25px rgba(250, 204, 21, 0.3);
+            z-index: 10;
+        }
+        
+        .slot-item { 
+            height: 32px; background: rgba(255,255,255,0.03); margin-bottom: 2px; 
+            display: flex; align-items: center; padding: 0 8px; font-size: 11px; 
+            border-left: 3px solid transparent; flex-shrink: 0; 
+        }
+        .slot-filled { border-left-color: #facc15; background: rgba(250, 204, 21, 0.08); }
+        .slot-num { width: 20px; font-weight: bold; color: #555; font-size: 9px; }
+        
+        .dob-badge {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 10px;
+            margin-left: 6px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .stream-layout {
+            display: flex !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            gap: 12px;
+            padding-bottom: 10px;
+        }
+        .stream-col {
+            min-width: 320px;
+            max-width: 320px;
+            flex-shrink: 0;
+            height: 100%;
+        }
+
+        ::-webkit-scrollbar { width: 4px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        
+        @keyframes slideUp { from { transform: translate(-50%, 50px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        .anno-animation { animation: slideUp 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="flex flex-col p-2 h-screen overflow-hidden">
+
+    <!-- LOGIN SCREEN -->
+    <div id="screen-login" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
+        <div class="bg-gray-900 p-8 rounded-2xl border-t-4 border-yellow-500 w-96 text-center shadow-2xl">
+            <h1 class="fvpl-font text-4xl italic font-black gold-text mb-6 uppercase tracking-widest">DRAFT PRO 5</h1>
+            <select id="role-select" class="w-full p-4 bg-black border border-gray-700 rounded text-white font-bold mb-6 outline-none focus:border-yellow-500">
+                <option value="admin">QUẢN TRỊ VIÊN (ADMIN)</option>
+                <option value="viewer">MÀN HÌNH KHÁN GIẢ (STREAM)</option>
+                <!-- JS sẽ thêm 5 team vào đây -->
+            </select>
+            <button onclick="doLogin()" class="w-full py-4 bg-yellow-600 text-black font-black fvpl-font italic text-xl rounded hover:bg-yellow-500 transition-all">VÀO PHÒNG DRAFT</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="main-app" class="hidden h-full flex flex-col overflow-hidden">
+        <div class="flex justify-between items-center bg-gray-900/50 p-3 rounded-xl border border-white/5 mb-2 shrink-0 shadow-lg">
+            <div class="flex items-center gap-4">
+                <button onclick="location.reload()" class="bg-gray-800 p-2 rounded-lg text-gray-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>
+                </button>
+                <div>
+                    <div id="display-role" class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest leading-none mb-1">---</div>
+                    <div id="round-info" class="text-xl font-black fvpl-font italic uppercase text-white leading-none tracking-tight">ROUND INFO</div>
+                </div>
+            </div>
+            <div id="timer-display" class="text-6xl font-black fvpl-font italic gold-text tracking-tighter">00</div>
+            <div id="admin-controls" class="hidden flex gap-2">
+                <button onclick="toggleTimer()" id="pause-btn" class="bg-blue-600 px-4 py-2 rounded text-[10px] font-bold uppercase italic hover:bg-blue-500 transition-all">Bắt đầu</button>
+                <button onclick="resetDraft()" class="bg-red-700 px-4 py-2 rounded text-[10px] font-bold uppercase italic hover:bg-red-600 transition-all">Reset</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-3 flex-1 min-h-0 overflow-hidden">
+            <div id="team-container" class="col-span-12 grid gap-2 min-h-0 overflow-hidden"></div>
+            <div id="pick-zone" class="col-span-12 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden">
+                <input type="text" id="search-input" oninput="searchPlayer()" placeholder="Tìm tên cầu thủ..." class="w-full p-4 bg-black border-2 border-gray-800 rounded-xl text-xl outline-none focus:border-yellow-500 italic text-white mb-3">
+                <div id="player-list" class="flex-1 overflow-y-auto grid grid-cols-2 lg:grid-cols-4 gap-2 content-start pr-1 pb-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANNOUNCEMENT -->
+    <div id="anno" class="hidden fixed bottom-12 left-1/2 -translate-x-1/2 z-[10000] bg-black/95 border-t-4 border-yellow-500 p-6 px-12 rounded-2xl text-center shadow-[0_0_80px_rgba(0,0,0,1)] anno-animation">
+        <div class="text-sm italic font-bold text-yellow-500 uppercase mb-1 tracking-[0.3em]" id="anno-team">TEAM 01 ĐÃ CHỌN</div>
+        <div class="text-5xl font-black fvpl-font italic text-white uppercase leading-none" id="anno-player">RONALDO</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCfbFKpqUxCUUCnYS7ZrHS-pfwbmQ4_dFk",
+            authDomain: "test-7b6d4.firebaseapp.com",
+            databaseURL: "https://test-7b6d4-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "test-7b6d4",
+            storageBucket: "test-7b6d4.firebasestorage.app",
+            messagingSenderId: "1051481560305",
+            appId: "1:1051481560305:web:3f69ad14e54dff01a68550"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const stateRef = ref(db, 'draft_state_5_strict');
+
+        const NUM_TEAMS = 5; // THAY ĐỔI TẠI ĐÂY
+
+        const FULL_ROUNDS = [
+            {n:"R1", p:1, t:30, l:11}, {n:"R2", p:1, t:30, l:11}, {n:"R3", p:1, t:30, l:11},
+            {n:"R4", p:2, t:60, l:11}, {n:"R5", p:2, t:60, l:11}, {n:"R6", p:2, t:60, l:11}, {n:"R7", p:2, t:60, l:11},
+            {n:"R8 (BỔ SUNG)", p:99, t:180, l:11},
+            {n:"R9", p:2, t:60, l:18}, {n:"R10", p:2, t:60, l:18}, {n:"R11", p:3, t:90, l:18},
+            {n:"R12 (BỔ SUNG)", p:99, t:180, l:18}
+        ];
+
+        let database = [];
+        const initialState = {
+            roundIdx: 0, turnIdx: 0, picksThisTurn: 0,
+            teams: Array.from({ length: NUM_TEAMS }, (_, i) => ({ id: i, name: `TEAM ${String(i+1).padStart(2, '0')}`, roster: [] })),
+            pickedIds: {}, endTime: 0, isPaused: true, currentPickGlobal: 0
+        };
+
+        let state = JSON.parse(JSON.stringify(initialState));
+        let userRole = '';
+
+        const select = document.getElementById('role-select');
+        for(let i=0; i < NUM_TEAMS; i++) {
+            const opt = document.createElement('option');
+            opt.value = `player-${i}`;
+            opt.innerText = `TEAM ${String(i+1).padStart(2, '0')}`;
+            select.appendChild(opt);
+        }
+
+        function removeAccents(str) { return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase() : ""; }
+
+        async function loadCSV() {
+            try {
+                const resp = await fetch('data.csv');
+                const text = await resp.text();
+                database = text.split('\n').filter(r => r.trim() !== '').slice(1).map(row => {
+                    const cols = row.split(',');
+                    return { id: cols[0]?.trim(), name: cols[1]?.trim(), dob: cols[2]?.trim() };
+                }).filter(p => p.id && p.name);
+            } catch (e) { console.error("Lỗi CSV:", e); }
+        }
+
+        window.doLogin = function() {
+            userRole = document.getElementById('role-select').value;
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            const container = document.getElementById('team-container');
+            const pickZone = document.getElementById('pick-zone');
+
+            if (userRole === 'admin') {
+                document.getElementById('admin-controls').classList.remove('hidden');
+                container.className = "col-span-12 lg:col-span-7 grid grid-cols-2 gap-2 h-full overflow-y-auto";
+                pickZone.className = "col-span-12 lg:col-span-5 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
+            } else if (userRole === 'viewer') {
+                pickZone.classList.add('hidden');
+                container.className = "col-span-12 stream-layout h-full";
+            } else {
+                container.className = "col-span-12 lg:col-span-3 grid grid-cols-1 h-full overflow-hidden";
+                pickZone.className = "col-span-12 lg:col-span-9 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
+            }
+            loadCSV();
+            syncFromFirebase();
+        };
+
+        function syncFromFirebase() {
+            onValue(stateRef, (snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    if (userRole === 'viewer' && val.currentPickGlobal > state.currentPickGlobal) {
+                        const lastAction = val.lastPickAction;
+                        if (lastAction) showAnnouncement(lastAction.teamName, lastAction.playerName);
+                    }
+                    state = val;
+                    renderUI();
+                    if (userRole === 'viewer') centerActiveTeam();
+                    checkAutoSkip();
+                } else { 
+                    state = JSON.parse(JSON.stringify(initialState)); 
+                    renderUI(); 
+                }
+            });
+        }
+
+        // LOGIC SNAKE DRAFT THEO SỐ LƯỢNG TEAM (NUM_TEAMS)
+        function getCurrentTeamIdx() {
+            const isReverse = Math.floor(state.currentPickGlobal / NUM_TEAMS) % 2 !== 0;
+            return isReverse ? ((NUM_TEAMS - 1) - state.turnIdx) : state.turnIdx;
+        }
+
+        function checkAutoSkip() {
+            const teamIdx = getCurrentTeamIdx();
+            const round = FULL_ROUNDS[state.roundIdx];
+            const rosterLen = (state.teams[teamIdx].roster || []).length;
+            if (rosterLen >= round.l && !state.isPaused) nextTurn();
+        }
+
+        function nextTurn() {
+            runTransaction(stateRef, (cur) => {
+                if (!cur) return cur;
+                cur.picksThisTurn = 0;
+                cur.turnIdx++;
+                if (cur.turnIdx >= NUM_TEAMS) {
+                    cur.turnIdx = 0;
+                    cur.roundIdx++;
+                    if (cur.roundIdx >= FULL_ROUNDS.length) {
+                        cur.roundIdx = FULL_ROUNDS.length - 1;
+                        cur.isPaused = true;
+                        return cur;
+                    }
+                }
+                cur.currentPickGlobal++;
+                const nextR = FULL_ROUNDS[cur.roundIdx];
+                cur.endTime = Date.now() + (nextR.t * 1000);
+                return cur;
+            });
+        }
+
+        window.doPick = function(id) {
+            if (state.isPaused) return alert("PHIÊN DRAFT ĐANG TẠM DỪNG!");
+
+            const teamIdx = getCurrentTeamIdx();
+            const round = FULL_ROUNDS[state.roundIdx];
+            if (userRole !== 'admin' && userRole !== `player-${teamIdx}`) return alert("KHÔNG PHẢI LƯỢT CỦA BẠN!");
+
+            const p = database.find(item => item.id === id);
+            const pickCount = state.pickedIds ? (state.pickedIds[id] || 0) : 0;
+            if (pickCount >= 1) return alert("Cầu thủ này đã được chọn!");
+            
+            runTransaction(stateRef, (cur) => {
+                if (!cur || cur.isPaused) return cur;
+                const tIdx = getCurrentTeamIdx();
+                const roster = cur.teams[tIdx].roster || [];
+                
+                if (roster.some(item => item.id === id)) return; 
+                if (cur.pickedIds && (cur.pickedIds[id] || 0) >= 1) return;
+
+                cur.teams[tIdx].roster = [...roster, p];
+                if (!cur.pickedIds) cur.pickedIds = {};
+                cur.pickedIds[id] = (cur.pickedIds[id] || 0) + 1;
+                cur.picksThisTurn++;
+                cur.lastPickAction = { teamName: cur.teams[tIdx].name, playerName: p.name };
+
+                if (cur.picksThisTurn >= round.p || cur.teams[tIdx].roster.length >= round.l) {
+                    cur.picksThisTurn = 0;
+                    cur.turnIdx++;
+                    if (cur.turnIdx >= NUM_TEAMS) {
+                        cur.turnIdx = 0;
+                        cur.roundIdx++;
+                    }
+                    cur.currentPickGlobal++;
+                    const nextR = FULL_ROUNDS[cur.roundIdx] || round;
+                    cur.endTime = Date.now() + (nextR.t * 1000);
+                }
+                return cur;
+            });
+
+            document.getElementById('search-input').value = '';
+            document.getElementById('player-list').innerHTML = '';
+        };
+
+        window.searchPlayer = function() {
+            const val = removeAccents(document.getElementById('search-input').value.trim());
+            const listDiv = document.getElementById('player-list');
+            listDiv.innerHTML = '';
+            if (val.length < 2) return;
+
+            const currentTeamIdx = getCurrentTeamIdx();
+            const myRoster = state.teams[currentTeamIdx].roster || [];
+
+            database.filter(p => removeAccents(p.name).includes(val)).slice(0, 20).forEach(p => {
+                const count = state.pickedIds ? (state.pickedIds[p.id] || 0) : 0;
+                const inMyTeam = myRoster.some(item => item.id === p.id);
+                if (count >= 1 || inMyTeam) return;
+
+                const card = document.createElement('div');
+                const btnOpacity = state.isPaused ? "opacity-50 cursor-not-allowed" : "";
+                
+                card.className = `bg-gray-800 p-2 rounded-xl border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
+                card.innerHTML = `
+                    <div class="overflow-hidden">
+                        <div class="font-bold text-xs uppercase text-white truncate">${p.name}</div>
+                        <div class="flex items-center mt-1">
+                            <span class="dob-badge">${p.dob}</span>
+                            <span class="text-[10px] ml-2 text-gray-500">${count}/1</span>
+                        </div>
+                    </div>
+                    <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-3 py-1 rounded font-black text-[10px] ${btnOpacity}">PICK</button>`;
+                listDiv.appendChild(card);
+            });
+        };
+
+        window.removePick = function(tIdx, pIdx) {
+            if (userRole !== 'admin') return;
+            const p = state.teams[tIdx].roster[pIdx];
+            if (state.pickedIds && state.pickedIds[p.id]) {
+                state.pickedIds[p.id]--;
+                if (state.pickedIds[p.id] <= 0) delete state.pickedIds[p.id];
+            }
+            state.teams[tIdx].roster.splice(pIdx, 1);
+            set(stateRef, state);
+        };
+
+        function renderUI() {
+            const currentIdx = getCurrentTeamIdx();
+            const round = FULL_ROUNDS[state.roundIdx];
+            document.getElementById('display-role').innerText = userRole.toUpperCase();
+            
+            const limitStr = round.p === 99 ? `ĐẾN KHI ĐỦ ${round.l}` : `${state.picksThisTurn}/${round.p}`;
+            document.getElementById('round-info').innerText = `${round.n} | ${state.teams[currentIdx]?.name} (${limitStr})`;
+            
+            const container = document.getElementById('team-container');
+            let teamsToRender = (userRole.startsWith('player-')) 
+                ? [state.teams[parseInt(userRole.split('-')[1])]] 
+                : state.teams;
+
+            container.innerHTML = teamsToRender.map((team) => {
+                const isActive = (team.id === currentIdx);
+                const isFull = (team.roster?.length >= round.l);
+                let slots = '';
+                for(let i=0; i<18; i++) {
+                    const p = team.roster ? team.roster[i] : null;
+                    slots += `<div class="slot-item ${p ? 'slot-filled' : ''}">
+                        <span class="slot-num">${String(i+1).padStart(2, '0')}</span>
+                        <div class="flex-1 flex justify-between items-center overflow-hidden">
+                            <span class="truncate uppercase font-black text-white italic">${p ? p.name : ''}</span>
+                            ${p ? `<span class="dob-badge">${p.dob}</span>` : ''}
+                        </div>
+                        ${(p && userRole === 'admin') ? `<button onclick="removePick(${team.id}, ${i})" class="text-red-500 font-bold ml-2 text-lg">×</button>` : ''}
+                    </div>`;
+                }
+                const streamClass = (userRole === 'viewer') ? 'stream-col' : '';
+                const opacity = (round.p === 99 && isFull && !userRole.startsWith('player')) ? 'opacity-30 grayscale' : '';
+
+                return `<div class="flex flex-col bg-gray-900 rounded-xl border border-white/5 h-full overflow-hidden ${isActive ? 'active-turn' : ''} ${streamClass} ${opacity}">
+                    <div class="p-2 text-center font-black italic fvpl-font text-xs shrink-0 ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-500'} uppercase">
+                        ${team.name} (${team.roster ? team.roster.length : 0}/${round.l})
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-1 min-h-0">${slots}</div>
+                </div>`;
+            }).join('');
+            
+            document.getElementById('pause-btn').innerText = state.isPaused ? "Bắt đầu" : "Tạm dừng";
+        }
+
+        function centerActiveTeam() {
+            const container = document.getElementById('team-container');
+            const activeCard = container.querySelector('.active-turn');
+            if (activeCard) {
+                const offset = activeCard.offsetLeft - (container.offsetWidth / 2) + (activeCard.offsetWidth / 2);
+                container.scrollTo({ left: offset, behavior: 'smooth' });
+            }
+        }
+
+        setInterval(() => {
+            if (state.isPaused || !state.endTime) {
+                document.getElementById('timer-display').innerText = "00";
+                return;
+            }
+            const diff = Math.max(0, Math.floor((state.endTime - Date.now()) / 1000));
+            document.getElementById('timer-display').innerText = String(diff).padStart(2, '0');
+            if (diff <= 0) nextTurn();
+        }, 1000);
+
+        window.toggleTimer = function() { 
+            if(userRole !== 'admin') return;
+            const round = FULL_ROUNDS[state.roundIdx];
+            runTransaction(stateRef, (cur) => {
+                if (!cur) return cur;
+                cur.isPaused = !cur.isPaused;
+                if (!cur.isPaused) cur.endTime = Date.now() + (round.t * 1000);
+                return cur;
+            });
+        };
+
+        window.resetDraft = function() { 
+            if(userRole === 'admin' && confirm("Reset toàn bộ dữ liệu Draft?")) set(stateRef, initialState); 
+        };
+        
+        function showAnnouncement(teamName, playerName) {
+            const anno = document.getElementById('anno');
+            document.getElementById('anno-team').innerText = teamName + " ĐÃ CHỌN";
+            document.getElementById('anno-player').innerText = playerName;
+            anno.classList.remove('hidden');
+            setTimeout(() => { anno.classList.add('hidden'); }, 2500);
+        }
+    </script>
+</body>
+</html>
