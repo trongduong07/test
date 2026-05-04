@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>DRAFT PRO 5 - STRICT SYSTEM</title>
+    <title>DRAFT PRO 4 - STRICT SYSTEM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap');
@@ -43,13 +43,13 @@
         .stream-layout {
             display: flex !important;
             flex-direction: row !important;
-            overflow-x: auto !important;
-            gap: 12px;
-            padding-bottom: 10px;
+            justify-content: center; /* Căn giữa 4 đội cho đẹp */
+            gap: 20px;
+            padding: 20px;
         }
         .stream-col {
-            min-width: 320px;
-            max-width: 320px;
+            min-width: 350px;
+            max-width: 380px;
             flex-shrink: 0;
             height: 100%;
         }
@@ -66,11 +66,10 @@
     <!-- LOGIN SCREEN -->
     <div id="screen-login" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
         <div class="bg-gray-900 p-8 rounded-2xl border-t-4 border-yellow-500 w-96 text-center shadow-2xl">
-            <h1 class="fvpl-font text-4xl italic font-black gold-text mb-6 uppercase tracking-widest">DRAFT PRO 5</h1>
+            <h1 class="fvpl-font text-4xl italic font-black gold-text mb-6 uppercase tracking-widest">DRAFT PRO 4</h1>
             <select id="role-select" class="w-full p-4 bg-black border border-gray-700 rounded text-white font-bold mb-6 outline-none focus:border-yellow-500">
                 <option value="admin">QUẢN TRỊ VIÊN (ADMIN)</option>
                 <option value="viewer">MÀN HÌNH KHÁN GIẢ (STREAM)</option>
-                <!-- JS sẽ thêm 5 team vào đây -->
             </select>
             <button onclick="doLogin()" class="w-full py-4 bg-yellow-600 text-black font-black fvpl-font italic text-xl rounded hover:bg-yellow-500 transition-all">VÀO PHÒNG DRAFT</button>
         </div>
@@ -126,9 +125,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const stateRef = ref(db, 'draft_state_5_strict');
-
-        const NUM_TEAMS = 5; // THAY ĐỔI TẠI ĐÂY
+        const stateRef = ref(db, 'draft_state_4_strict'); // Đổi key để không bị trùng với bản 16 đội
 
         const FULL_ROUNDS = [
             {n:"R1", p:1, t:30, l:11}, {n:"R2", p:1, t:30, l:11}, {n:"R3", p:1, t:30, l:11},
@@ -141,7 +138,7 @@
         let database = [];
         const initialState = {
             roundIdx: 0, turnIdx: 0, picksThisTurn: 0,
-            teams: Array.from({ length: NUM_TEAMS }, (_, i) => ({ id: i, name: `TEAM ${String(i+1).padStart(2, '0')}`, roster: [] })),
+            teams: Array.from({ length: 4 }, (_, i) => ({ id: i, name: `TEAM ${String(i+1).padStart(2, '0')}`, roster: [] })),
             pickedIds: {}, endTime: 0, isPaused: true, currentPickGlobal: 0
         };
 
@@ -149,7 +146,7 @@
         let userRole = '';
 
         const select = document.getElementById('role-select');
-        for(let i=0; i < NUM_TEAMS; i++) {
+        for(let i=0; i<4; i++) {
             const opt = document.createElement('option');
             opt.value = `player-${i}`;
             opt.innerText = `TEAM ${String(i+1).padStart(2, '0')}`;
@@ -179,6 +176,7 @@
 
             if (userRole === 'admin') {
                 document.getElementById('admin-controls').classList.remove('hidden');
+                // Admin xem cả 4 đội xếp 2x2 hoặc 4x1
                 container.className = "col-span-12 lg:col-span-7 grid grid-cols-2 gap-2 h-full overflow-y-auto";
                 pickZone.className = "col-span-12 lg:col-span-5 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
             } else if (userRole === 'viewer') {
@@ -211,10 +209,10 @@
             });
         }
 
-        // LOGIC SNAKE DRAFT THEO SỐ LƯỢNG TEAM (NUM_TEAMS)
         function getCurrentTeamIdx() {
-            const isReverse = Math.floor(state.currentPickGlobal / NUM_TEAMS) % 2 !== 0;
-            return isReverse ? ((NUM_TEAMS - 1) - state.turnIdx) : state.turnIdx;
+            // Logic Snake Draft: Lượt 1: 0,1,2,3 -> Lượt 2: 3,2,1,0
+            const isReverse = Math.floor(state.currentPickGlobal / 4) % 2 !== 0;
+            return isReverse ? (3 - state.turnIdx) : state.turnIdx;
         }
 
         function checkAutoSkip() {
@@ -229,7 +227,7 @@
                 if (!cur) return cur;
                 cur.picksThisTurn = 0;
                 cur.turnIdx++;
-                if (cur.turnIdx >= NUM_TEAMS) {
+                if (cur.turnIdx > 3) { // 4 đội nên index tối đa là 3
                     cur.turnIdx = 0;
                     cur.roundIdx++;
                     if (cur.roundIdx >= FULL_ROUNDS.length) {
@@ -273,7 +271,7 @@
                 if (cur.picksThisTurn >= round.p || cur.teams[tIdx].roster.length >= round.l) {
                     cur.picksThisTurn = 0;
                     cur.turnIdx++;
-                    if (cur.turnIdx >= NUM_TEAMS) {
+                    if (cur.turnIdx > 1) {
                         cur.turnIdx = 0;
                         cur.roundIdx++;
                     }
@@ -375,7 +373,7 @@
         function centerActiveTeam() {
             const container = document.getElementById('team-container');
             const activeCard = container.querySelector('.active-turn');
-            if (activeCard) {
+            if (activeCard && userRole === 'viewer') {
                 const offset = activeCard.offsetLeft - (container.offsetWidth / 2) + (activeCard.offsetWidth / 2);
                 container.scrollTo({ left: offset, behavior: 'smooth' });
             }
@@ -403,7 +401,7 @@
         };
 
         window.resetDraft = function() { 
-            if(userRole === 'admin' && confirm("Reset toàn bộ dữ liệu Draft?")) set(stateRef, initialState); 
+            if(userRole === 'admin' && confirm("Reset toàn bộ dữ liệu Draft cho 4 đội?")) set(stateRef, initialState); 
         };
         
         function showAnnouncement(teamName, playerName) {
