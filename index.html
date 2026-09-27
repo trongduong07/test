@@ -176,7 +176,6 @@
 
             if (userRole === 'admin') {
                 document.getElementById('admin-controls').classList.remove('hidden');
-                // Admin xem cả 4 đội xếp 2x2 hoặc 4x1
                 container.className = "col-span-12 lg:col-span-7 grid grid-cols-2 gap-2 h-full overflow-y-auto";
                 pickZone.className = "col-span-12 lg:col-span-5 flex flex-col bg-gray-900/40 rounded-2xl p-4 border border-white/5 overflow-hidden";
             } else if (userRole === 'viewer') {
@@ -271,7 +270,7 @@
                 if (cur.picksThisTurn >= round.p || cur.teams[tIdx].roster.length >= round.l) {
                     cur.picksThisTurn = 0;
                     cur.turnIdx++;
-                    if (cur.turnIdx > 1) {
+                    if (cur.turnIdx > 3) {
                         cur.turnIdx = 0;
                         cur.roundIdx++;
                     }
@@ -293,26 +292,32 @@
             if (val.length < 2) return;
 
             const currentTeamIdx = getCurrentTeamIdx();
-            const myRoster = state.teams[currentTeamIdx].roster || [];
+            const myRoster = state.teams[currentTeamIdx]?.roster || [];
 
             database.filter(p => removeAccents(p.name).includes(val)).slice(0, 20).forEach(p => {
                 const count = state.pickedIds ? (state.pickedIds[p.id] || 0) : 0;
                 const inMyTeam = myRoster.some(item => item.id === p.id);
-                if (count >= 1 || inMyTeam) return;
+                const isPicked = count >= 1 || inMyTeam;
 
                 const card = document.createElement('div');
                 const btnOpacity = state.isPaused ? "opacity-50 cursor-not-allowed" : "";
                 
-                card.className = `bg-gray-800 p-2 rounded-xl border border-gray-700 flex justify-between items-center hover:border-yellow-500 cursor-pointer`;
+                card.className = isPicked
+                    ? `bg-gray-900/60 p-2 rounded-xl border border-gray-800 flex justify-between items-center opacity-60`
+                    : `bg-gray-800 p-2 rounded-xl border border-gray-700 flex justify-between items-center hover:border-yellow-500`;
+
                 card.innerHTML = `
                     <div class="overflow-hidden">
-                        <div class="font-bold text-xs uppercase text-white truncate">${p.name}</div>
+                        <div class="font-bold text-xs uppercase truncate ${isPicked ? 'line-through text-gray-400' : 'text-white'}">${p.name}</div>
                         <div class="flex items-center mt-1">
-                            <span class="dob-badge">${p.dob}</span>
-                            <span class="text-[10px] ml-2 text-gray-500">${count}/1</span>
+                            <span class="dob-badge ${isPicked ? 'opacity-50' : ''}">${p.dob}</span>
+                            <span class="text-[10px] ml-2 ${isPicked ? 'text-red-400 font-bold' : 'text-gray-500'}">${count}/1</span>
                         </div>
                     </div>
-                    <button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-3 py-1 rounded font-black text-[10px] ${btnOpacity}">PICK</button>`;
+                    ${isPicked
+                        ? `<button disabled class="bg-gray-700 text-gray-400 px-3 py-1 rounded font-black text-[10px] cursor-not-allowed">ĐÃ CHỌN</button>`
+                        : `<button onclick="doPick('${p.id}')" class="bg-yellow-600 text-black px-3 py-1 rounded font-black text-[10px] ${btnOpacity}">PICK</button>`
+                    }`;
                 listDiv.appendChild(card);
             });
         };
